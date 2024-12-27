@@ -104,7 +104,7 @@ export default function SignUp() {
           timestamp: serverTimestamp(),
         };
 
-        await updateDoc(doc(db, `companies/${state.selectedCompanyId}/users`, currentUserId), userData);
+        await updateDoc(doc(db, `schools/${state.selectedSchoolId}/users`, currentUserId), userData);
         toast.success("User updated successfully", { position: toast.POSITION.TOP_RIGHT });
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -121,7 +121,7 @@ export default function SignUp() {
           timestamp: serverTimestamp(),
         };
 
-        await setDoc(doc(db, `companies/${state.selectedCompanyId}/users`, user.uid), userData);
+        await setDoc(doc(db, `schools/${state.selectedSchoolId}/users`, user.uid), userData);
         toast.success("User added successfully", { position: toast.POSITION.TOP_RIGHT });
       }
 
@@ -138,7 +138,7 @@ export default function SignUp() {
     showConfirmDialog(async () => {
       try {
         const userToDelete = state.users[index];
-        await deleteDoc(doc(db, `companies/${state.selectedCompanyId}/users`, userToDelete.id));
+        await deleteDoc(doc(db, `schools/${state.selectedSchoolId}/users`, userToDelete.id));
 
         toast.success("User deleted successfully", { position: toast.POSITION.TOP_RIGHT });
       } catch (error) {

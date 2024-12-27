@@ -8,17 +8,16 @@ import { useMyContext } from '../Context/MyContext';
 import { doc, getDoc } from "firebase/firestore";
 
 export default function SignIn() {
-  const { state, setState, updateSelectedCompany } = useMyContext();
+  const { state, setState, updateSelectedSchool } = useMyContext();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    companyName: "",
-    companyId: ""
+    schoolName: "",
+    schoolId: ""
   });
-  const { email, password, companyName, companyId } = formData;
+  const { email, password, schoolName, schoolId } = formData;
   const navigate = useNavigate();
-
 
   useEffect(() => {
     // Prevent back navigation by redirecting to the home page
@@ -27,8 +26,6 @@ export default function SignIn() {
       navigate("/", { replace: true }); // Redirects to the home page
     };
   }, [navigate]);
-  
- 
 
   function onChange(e) {
     const { id, value } = e.target;
@@ -37,15 +34,15 @@ export default function SignIn() {
       [id]: value,
     }));
 
-    if (id === 'companyName') {
-      const selectedCompany = state.companies.find(company => company.companyName === value);
-      if (selectedCompany) {
-        updateSelectedCompany(value, selectedCompany.id);
+    if (id === 'schoolName') {
+      const selectedSchool = state.schools.find(school => school.schoolName === value);
+      if (selectedSchool) {
+        updateSelectedSchool(value, selectedSchool.id);
         setFormData(prevState => ({
           ...prevState,
-          companyId: selectedCompany.id
+          schoolId: selectedSchool.id
         }));
-        console.log("Selected company updated to:", value, "with ID:", selectedCompany.id);
+        console.log("Selected school updated to:", value, "with ID:", selectedSchool.id);
       }
     }
   }
@@ -74,6 +71,7 @@ export default function SignIn() {
             navigate("/posscreen");
           }
         } else {
+          
           toast.warning("Please Try Again");
         }
       }
@@ -91,7 +89,7 @@ export default function SignIn() {
 
   async function getUserData(userId) {
     try {
-      const userDocRef = doc(db, "companies", companyId, "users", userId);
+      const userDocRef = doc(db, "schools", schoolId, "users", userId);
       const userDocSnapshot = await getDoc(userDocRef);
 
       if (userDocSnapshot.exists()) {
@@ -109,20 +107,20 @@ export default function SignIn() {
   const handleReload = () => {
     window.location.reload();
   };
-  
+
   return (
     <section>
       <div className="flex items-center justify-between mt-6">
-    <button
-      onClick={handleReload}
-      className="p-2 bg-gray-200 rounded ml-2"
-    >
-      Reload
-    </button>
-    
-    <h1 className="text-3xl font-bold text-center flex-1">Sign In</h1>
-    <h1 className="text-3xl font-bold text-center flex-1">School</h1>
-  </div>
+        <button
+          onClick={handleReload}
+          className="p-2 bg-gray-200 rounded ml-2"
+        >
+          Reload
+        </button>
+
+        <h1 className="text-3xl font-bold text-center flex-1">Sign In</h1>
+        <h1 className="text-3xl font-bold text-center flex-1">School</h1>
+      </div>
       <div className="flex justify-center flex-wrap items-center px-6 py-12 max-w-6xl mx-auto">
         <div className="md:w-[67%] lg:w-[50%] mb-12 md:mb-6">
           <img
@@ -163,19 +161,19 @@ export default function SignIn() {
               )}
             </div>
             <select
-              id="companyName"
-              value={companyName}
+              id="schoolName"
+              value={schoolName}
               onChange={onChange}
               className="mb-6 w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"
             >
-              <option value="">Select Company</option>
-              {state.companies.map((company) => (
+              <option value="">Select School</option>
+              {state.schools.map((school) => (
                 <option
-                  key={company.id}
-                  value={company.companyName}
-                  disabled={companyName && company.companyName !== companyName}
+                  key={school.id}
+                  value={school.schoolName}
+                  disabled={schoolName && school.schoolName !== schoolName}
                 >
-                  {company.companyName}
+                  {school.schoolName}
                 </option>
               ))}
             </select>
@@ -189,7 +187,7 @@ export default function SignIn() {
                   onClick={() => {
                     const password = prompt("Enter authorization password to proceed:");
                     if (password === "deancoonz28@john") {
-                      navigate("/company-sign-up");
+                      navigate("/school-sign-up");
                     } else {
                       alert("Wrong authorization password. Access denied.");
                     }

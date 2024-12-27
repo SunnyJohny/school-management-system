@@ -38,9 +38,9 @@ const InventorySidePanel = ({ onItemSelected }) => {
         </Link>
 
 
-        <Link to="/sales" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
+        <Link to="/fees" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
           <FaListAlt className="text-xl" />
-          <p className="ml-2">Sales</p>
+          <p className="ml-2">Fees</p>
         </Link>
 
         <Link to="/account" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
@@ -48,9 +48,25 @@ const InventorySidePanel = ({ onItemSelected }) => {
           <p className="ml-2">Account</p>
         </Link>
 
+        <Link to="/payment" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
+          <FaUserCircle className="text-xl" />
+          <p className="ml-2">Payment</p>
+        </Link>
         <Link to="/sign-up" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
           <FaUserCircle className="text-xl" />
           <p className="ml-2">Staff Profile</p>
+        </Link>
+        <Link to="/students" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
+          <FaUserCircle className="text-xl" />
+          <p className="ml-2">Students</p>
+        </Link>
+        <Link to="/teachers" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
+          <FaUserCircle className="text-xl" />
+          <p className="ml-2">Teachers</p>
+        </Link>
+        <Link to="/teachers" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">
+          <FaUserCircle className="text-xl" />
+          <p className="ml-2">Attendance</p>
         </Link>
 
         <Link to="/report-bug" className="flex items-center p-2 cursor-pointer hover:bg-gray-700">

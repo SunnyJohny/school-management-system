@@ -13,8 +13,8 @@ import AddProduct from "./components/AddProducts";
 import ProductDetails from "./components/ProductDetails";
 import ProductHistory from './components/ProductHistory';
 import PrintInventoryPage from './components/PrintInventoryPage';
-import SalesPage from './pages/SalesPage';
-import PrintSalesPage from './components/PrintSalesPage';
+// import SalesPage from './pages/SalesPage';
+// import PrintSalesPage from './components/PrintSalesPage';
 import AddExpense from './components/AddExpenses';
 import AddGoodPurchase  from './components/AddPurchases';
 import AdminComponent from './components/Admin';
@@ -29,6 +29,9 @@ import ContactMe from './pages/ContactMe';
 import CompanySignUp from './pages/CompanySignUp';
 import AddShares from './components/Shares';
 import GoodsPurchases from './pages/GoodsPurchases';
+import Teachers from './pages/Teachers';
+import ManageStudents from './pages/Students';
+import FeesPaidReport from './pages/FeesPaid';
 
 
 function App() {
@@ -41,6 +44,8 @@ function App() {
             <Route path="/admin" element={<AdminComponent />} />
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/teachers" element={<Teachers />} />
+            <Route path="/students" element={<ManageStudents />} />
             <Route path="/report-bug" element={<ContactMe />} />
             <Route path="/company-sign-up" element={<CompanySignUp/>} />
             <Route path="/posscreen" element={<PosScreen />} />
@@ -57,12 +62,12 @@ function App() {
             <Route path="/purchases" element={<GoodsPurchases />} />
             <Route path="/profile" element={<PrivateRoute />} />
             <Route path="/inventory-page" element={<InventoryPage />} />
-            <Route path="/sales" element={<SalesPage />} />
+            <Route path="/fees" element={<FeesPaidReport />} />
             <Route path="/add-product" element={<AddProduct />} />
             <Route path="/product-details/:productId" element={<ProductDetails />} />
             <Route path="/product-history/:productId" element={<ProductHistory />} />
             <Route path="/print-inventory" element={<PrintInventoryPage />} />
-            <Route path="/print-sales" element={<PrintSalesPage />} />
+            {/* <Route path="/print-sales" element={<PrintSalesPage />} /> */}
           </Routes>
         </div>
         <ToastContainer

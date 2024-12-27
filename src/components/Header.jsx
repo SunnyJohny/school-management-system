@@ -23,10 +23,10 @@ export default function Header() {
   // }, [auth]);
 
   useEffect(() => {
-    console.log('Selected Company Name has changed:', state.selectedCompanyName);
-  }, [state.selectedCompanyName]);
+    console.log('Selected Company Name has changed:', state.selectedSchoolName);
+  }, [state.selectedSchoolName]);
 
-  const selectedCompanyName = state.selectedCompanyName || "";
+  const selectedSchoolName = state.selectedSchoolName || "";
 
   return (
     <div className="bg-white border-b shadow-sm sticky top-0 z-40">
@@ -44,7 +44,7 @@ export default function Header() {
 
         {/* Center Section: Company Name */}
         <div className="text-lg font-semibold text-center text-gray-800">
-          {selectedCompanyName}
+          {selectedSchoolName}
         </div>
 
         {/* Right Section: Date, Cart Icon */}
