@@ -66,7 +66,9 @@ export default function SignIn() {
           }));
 
           if (userData.role === 'admin') {
-            navigate("/admin");
+            // navigate("/admin");
+            navigate("/posscreen");
+
           } else {
             navigate("/posscreen");
           }

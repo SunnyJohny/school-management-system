@@ -170,7 +170,7 @@ export default function Teachers() {
           <h1 className="text-xl font-bold">Teachers</h1>
         </div>
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/posscreen")}
           className="p-2 bg-gray-200 rounded"
         >
           Back
@@ -233,11 +233,20 @@ export default function Teachers() {
         </div>
       )}
 
+     {/* function TeacherDetailsModal({ selectedTeacher, setSelectedTeacher }) {
+  // Function to close the modal
+  //  handleCloseDetails = () => {
+  //   setSelectedTeacher(null); // Reset the selected teacher to close the modal
+  // };
+
+  return ( */}
+    <>
       {/* Selected Teacher Details */}
       {selectedTeacher && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-md">
-            <button onClick={handleCloseDetails} className="absolute top-4 right-4">
+          <div className="bg-white rounded-lg p-6 w-11/12 max-w-md relative">
+            {/* Close Button */}
+            <button onClick={handleCloseDetails} className="absolute top-4 right-4 text-gray-600">
               <MdClose size={24} />
             </button>
             <div className="text-center">
@@ -255,6 +264,9 @@ export default function Teachers() {
           </div>
         </div>
       )}
+    </>
+  
+
 
       {/* Teachers Table */}
       <table className="table-auto w-full mt-4 border">
@@ -270,36 +282,52 @@ export default function Teachers() {
           </tr>
         </thead>
         <tbody>
-          {state.teachers.map((teacher, index) => (
-            <tr key={index}  onClick={() => handleRowClick(teacher)} className="border">
-              
-              <td className="px-4 py-2">
-                {teacher.photoURL ? (
-                  <img
-                    src={teacher.photoURL}
-                    alt={teacher.name}
-                    className="w-12 h-12 object-cover rounded-full"
-                  />
-                ) : (
-                  <span className="text-gray-500">No Photo</span>
-                )}
-              </td>
-              <td className="px-4 py-2">{teacher.name}</td>
-              <td className="px-4 py-2">{teacher.class}</td>
-              <td className="px-4 py-2">{teacher.email}</td>
-              <td className="px-4 py-2">{teacher.subject}</td>
-              <td className="px-4 py-2">{teacher.phone}</td>
-              <td className="px-4 py-2">
-                <button onClick={() => handleEditTeacher(teacher.id)}  className="bg-yellow-500 text-white px-2 py-1 rounded">
-                  Edit
-                </button>
-                <button onClick={() => handleDeleteTeacher(teacher.id)}  className="bg-red-500 text-white px-2 py-1 rounded">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+  {state.teachers.map((teacher, index) => (
+    <tr
+      key={index}
+      onClick={() => handleRowClick(teacher)}
+      className="border cursor-pointer hover:bg-gray-100"
+    >
+      <td className="px-4 py-2">
+        {teacher.photoURL ? (
+          <img
+            src={teacher.photoURL}
+            alt={teacher.name}
+            className="w-12 h-12 object-cover rounded-full"
+          />
+        ) : (
+          <span className="text-gray-500">No Photo</span>
+        )}
+      </td>
+      <td className="px-4 py-2">{teacher.name}</td>
+      <td className="px-4 py-2">{teacher.class}</td>
+      <td className="px-4 py-2">{teacher.email}</td>
+      <td className="px-4 py-2">{teacher.subject}</td>
+      <td className="px-4 py-2">{teacher.phone}</td>
+      <td className="px-4 py-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering row click
+            handleEditTeacher(teacher.id);
+          }}
+          className="bg-yellow-500 text-white px-2 py-1 rounded"
+        >
+          Edit
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering row click
+            handleDeleteTeacher(teacher.id);
+          }}
+          className="bg-red-500 text-white px-2 py-1 rounded"
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
       </table>
       <div className="flex justify-center p-2 mb-12 space-x-4">
           <button

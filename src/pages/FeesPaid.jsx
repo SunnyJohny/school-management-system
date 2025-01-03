@@ -5,7 +5,7 @@ import { FaCalendar } from 'react-icons/fa';
 import { faChartLine, faShoppingCart, faCalendarAlt, faBox } from '@fortawesome/free-solid-svg-icons';
 import { useMyContext } from '../Context/MyContext';
 import { MdClose } from 'react-icons/md';
-import SalesPageSidePanel from '../components/SalesPageSidePanel';
+
 import ProductsPageSidePanel from '../components/ProductsPagesidePanel';
 import { convertToWords } from './Students';
 // import ProductsPageSidePanel from '../components/ProductsPageSidePanel';
@@ -55,21 +55,21 @@ const FeesPaidReport = () => {
   const handleDateOptionChange = (e) => {
     const selectedOption = e.target.value;
     setSelectedDateOption(selectedOption);
-  
+
     let startDate = new Date();
     let endDate = new Date();
-  
+
     switch (selectedOption) {
       case 'All':
         setFromDate(null);
         setToDate(null);
         return;
-  
+
       case 'Today':
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
         break;
-  
+
       case 'This Week':
         const todayIndex = startDate.getDay(); // 0 = Sunday
         const startOfWeek = new Date();
@@ -79,17 +79,17 @@ const FeesPaidReport = () => {
         endDate.setHours(23, 59, 59, 999);
         startDate = startOfWeek;
         break;
-  
+
       case 'This Month':
         startDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1); // First day of the month
         endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); // Last day of the month
         break;
-  
+
       case 'This Month - Date':
         startDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1); // First day of the month
         endDate.setHours(23, 59, 59, 999); // Current time today
         break;
-  
+
       case 'This Week to Date':
         const weekToDateStart = new Date();
         weekToDateStart.setDate(weekToDateStart.getDate() - weekToDateStart.getDay()); // First day of the week
@@ -98,7 +98,7 @@ const FeesPaidReport = () => {
         endDate.setHours(23, 59, 59, 999); // Current time today
         startDate = weekToDateStart;
         break;
-  
+
       case 'Last Week':
         const lastWeekStart = new Date();
         lastWeekStart.setDate(lastWeekStart.getDate() - lastWeekStart.getDay() - 7); // Previous week's Sunday
@@ -108,27 +108,27 @@ const FeesPaidReport = () => {
         endDate.setHours(23, 59, 59, 999);
         startDate = lastWeekStart;
         break;
-  
+
       case 'Last Month':
         startDate = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1); // First day of last month
         endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0); // Last day of last month
         break;
-  
+
       case 'Yesterday':
         startDate.setDate(startDate.getDate() - 1);
         startDate.setHours(0, 0, 0, 0);
         endDate = new Date(startDate);
         endDate.setHours(23, 59, 59, 999);
         break;
-  
+
       default:
         break;
     }
-  
+
     setFromDate(startDate);
     setToDate(endDate);
   };
-  
+
 
   const handleFromDateChange = (date) => {
     setFromDate(date);
@@ -431,8 +431,8 @@ const FeesPaidReport = () => {
 
   return (
     <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 px-4 md:px-0">
-      <div className="flex-none">
-        {state.user && state.user.role === 'admin' ? <SalesPageSidePanel /> : <ProductsPageSidePanel />}
+      <div className="hidden md:block flex-none">
+        <ProductsPageSidePanel />
       </div>
 
       <div className="ml-8 flex-1">
@@ -546,9 +546,9 @@ const FeesPaidReport = () => {
 export default FeesPaidReport;
 
 
- export const renderStatCard = (title, value, color, icon) => (
-    <div className={`bg-${color}-500 text-white p-4 rounded-md inline-block m-2`}>
-      <div className="text-sm">{title}</div>
-      <div className="text-2xl font-bold">{value}</div>
-    </div>
-  );
+export const renderStatCard = (title, value, color, icon) => (
+  <div className={`bg-${color}-500 text-white p-4 rounded-md inline-block m-2`}>
+    <div className="text-sm">{title}</div>
+    <div className="text-2xl font-bold">{value}</div>
+  </div>
+);

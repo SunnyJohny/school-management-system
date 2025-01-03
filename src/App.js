@@ -32,6 +32,8 @@ import GoodsPurchases from './pages/GoodsPurchases';
 import Teachers from './pages/Teachers';
 import ManageStudents from './pages/Students';
 import FeesPaidReport from './pages/FeesPaid';
+import Classes from './pages/Classes';
+import TeachersAttendance from './pages/TeachersAttendance';
 
 
 function App() {
@@ -45,6 +47,10 @@ function App() {
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
             <Route path="/teachers" element={<Teachers />} />
+            <Route path="/teachersattendance" element={<TeachersAttendance />} />
+
+            <Route path="/classes" element={<Classes />} />
+
             <Route path="/students" element={<ManageStudents />} />
             <Route path="/report-bug" element={<ContactMe />} />
             <Route path="/company-sign-up" element={<CompanySignUp/>} />

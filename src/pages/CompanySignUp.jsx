@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
@@ -7,6 +7,7 @@ import { useMyContext } from "../Context/MyContext";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
 
+// Confirmation dialog component
 const ConfirmDialog = ({ onConfirm, onCancel }) => (
   <div>
     <p>Are you sure you want to delete this school?</p>
@@ -27,6 +28,7 @@ const ConfirmDialog = ({ onConfirm, onCancel }) => (
   </div>
 );
 
+// Input field component
 const InputField = ({ id, type, value, onChange, placeholder }) => (
   <input
     type={type}
@@ -51,7 +53,6 @@ export default function SchoolSignUp() {
     address: "",
     phoneNumber: "",
   });
-  const [schoolUpdated, setSchoolUpdated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -95,7 +96,6 @@ export default function SchoolSignUp() {
       }
 
       updateSelectedSchool(schoolName, userId);
-      setSchoolUpdated(true);
       closeModal();
     } catch (error) {
       toast.error("Something went wrong. Please try again.");

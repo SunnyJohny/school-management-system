@@ -14,7 +14,7 @@ const UserInformation = () => {
   }, [user, userName]); // Include userName in the dependency array
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col p-4 items-center">
       {/* Circular Image */}
       <div className="bg-gray-500 w-12 h-12 rounded-full mb-2">
         {/* You can add an image here if needed */}

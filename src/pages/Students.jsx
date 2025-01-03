@@ -270,6 +270,10 @@ export default function Students() {
     <body>
       <div class="header">
         <h2>${state.selectedSchoolName || "School Name"}</h2>
+        <h2>${state.selectedSchoolAddress || "School Address"}</h2>
+        <h2>${state.selectedSchoolPhoneNumber || "School PhoneNumber"}</h2>
+        <h2>${state.selectedSchoolEmail || "School Email"}</h2>
+        
         <p>Receipt Number: ${receiptId}</p>
         <p>Date: ${transactionDateTime}</p>
       </div>
@@ -278,7 +282,7 @@ export default function Students() {
         <p><strong>Student Class:</strong> ${paymentData.studentClass}</p>
         <p><strong>Guardian Phone:</strong> ${paymentData.guardianPhone}</p>
         <p><strong>Total Amount:</strong> ₦${paymentData.totalAmount.toFixed(2)}</p>
-        <p><strong>Amount in Words:</strong> ${amountInWords} Naira Only</p>
+        <p><strong>Amount in Words:</strong> ${amountInWords} Only</p>
         <p><strong>Payment Method:</strong> ${paymentData.paymentMethod}</p>
         <p><strong>Term:</strong> ${paymentData.term}</p>
       </div>
@@ -309,7 +313,7 @@ export default function Students() {
       <div class="footer">
         <hr />
         <p style="text-align: center; font-style: italic; margin-top: 20px; font-size: 14px;">
-          Aspiring for Excellence
+          Aspiring for Excellence...
         </p>
       </div>
       <div class="footer">
@@ -541,18 +545,20 @@ export default function Students() {
                 <option value="Female">Female</option>
               </select>
               <select
-                id="class"
-                value={studentClass}
-                onChange={onChange}
-                className="input mb-4"
-                required={!isEditing}
-              >
-                <option value="">Select Class</option>
-                <option value="Class 1">Class 1</option>
-                <option value="Class 2">Class 2</option>
-                <option value="Class 3">Class 3</option>
-                <option value="Class 4">Class 4</option>
-              </select>
+  id="class"
+  value={studentClass}
+  onChange={onChange}
+  className="input mb-4"
+  required={!isEditing}
+>
+  <option value="">Select Class</option>
+  {state.classes.map((classItem) => (
+    <option key={classItem.id} value={classItem.className}>
+      {classItem.className}
+    </option>
+  ))}
+</select>
+
               <input
                 type="text"
                 id="guardianPhone"
