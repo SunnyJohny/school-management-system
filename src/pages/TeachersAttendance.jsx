@@ -5,7 +5,7 @@ import { useMyContext } from "../Context/MyContext";
 const TeachersAttendance = () => {
   const { state } = useMyContext();
 
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [isClockIn, setIsClockIn] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
 
