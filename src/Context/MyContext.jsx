@@ -70,8 +70,7 @@ export const MyContextProvider = ({ children }) => {
       isSidePanelOpen: !prevState.isSidePanelOpen
     }));
   };
-
-
+ 
   const searchByKeyword = (items, keyword) => {
     console.log('Searching with keyword:', keyword); // Log the keyword
     console.log('Items:', items); // Log the items being searched
@@ -1290,6 +1289,7 @@ useEffect(() => {
       clearCart,
       toggleCart,
       toggleSidePanel,
+      
       increaseQuantity,
       
 fetchCompanies,

@@ -21,6 +21,14 @@ export default function Header() {
     console.log("Selected Company Name has changed:", state.selectedSchoolName);
   }, [state.selectedSchoolName]);
 
+  const handleBurgerClick = () => {
+    if (state.user) {
+      toggleSidePanel(); // Allow toggling only if user is signed in
+    } else {
+      console.log("User is not signed in. Burger menu is disabled.");
+    }
+  };
+
   return (
     <div className="bg-white border-b shadow-sm sticky top-0 z-40">
       <header className="flex justify-between items-center px-2 max-w-6xl mx-auto">
@@ -45,8 +53,12 @@ export default function Header() {
           <div className="text-lg font-medium text-gray-800 hidden md:block">
             {time.toLocaleTimeString()}
           </div>
-          <div className="block md:hidden" onClick={toggleSidePanel}>
-            <FaBars className="text-xl cursor-pointer" />
+          {/* Burger menu always visible */}
+          <div className="block md:hidden" onClick={handleBurgerClick}>
+            <FaBars 
+              className={`text-xl cursor-pointer ${state.user ? "text-gray-800" : "text-gray-400 cursor-not-allowed"}`}
+              title={state.user ? "Open menu" : "Sign in to use the menu"}
+            />
           </div>
         </div>
       </header>

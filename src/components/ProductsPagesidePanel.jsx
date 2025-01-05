@@ -1,5 +1,18 @@
 import React from 'react';
-import { FaTachometerAlt, FaDollarSign, FaUsers, FaUserTie, FaChalkboardTeacher, FaCalendarCheck, FaBuilding, FaMoneyCheckAlt, FaMoneyBillWave, FaFileInvoiceDollar, FaBug, FaSignOutAlt } from 'react-icons/fa';
+import {
+  FaTachometerAlt,
+  FaDollarSign,
+  FaUsers,
+  FaUserTie,
+  FaChalkboardTeacher,
+  FaCalendarCheck,
+  FaBuilding,
+  FaMoneyCheckAlt,
+  FaMoneyBillWave,
+  FaFileInvoiceDollar,
+  FaBug,
+  FaSignOutAlt,
+} from 'react-icons/fa';
 import UserInformation from './User';
 import { useMyContext } from '../Context/MyContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,13 +22,14 @@ const ProductsPageSidePanel = () => {
   const navigate = useNavigate();
 
   const handleLinkClick = (path) => {
-    if (path === "/") {
-      handleLogout(); // If it's a logout action, perform logout
-    } else {
-      toggleSidePanel(); // Close the side panel for other links
+   
+      // Close the side panel only on small screens
+      if (window.innerWidth <= 768) {
+        toggleSidePanel();
+     
     }
   };
-  
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -70,7 +84,7 @@ const ProductsPageSidePanel = () => {
           <FaBug className="text-xl" />
           <p className="ml-2">Report Bug</p>
         </Link>
-        <Link to="/" onClick={() => handleLinkClick('/')} className="flex items-center p-2 mb-2 cursor-pointer hover:bg-gray-700">
+        <Link to="/" onClick={() => handleLogout('/')} className="flex items-center p-2 mb-2 cursor-pointer hover:bg-gray-700">
           <FaSignOutAlt className="text-xl" />
           <p className="ml-2">Logout</p>
         </Link>
