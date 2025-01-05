@@ -26,7 +26,7 @@ export default function Header() {
       <header className="flex justify-between items-center px-2 max-w-6xl mx-auto">
         {/* Left Section: Logo */}
         <div className="flex items-center mt-2">
-          <div onClick={() => toggleSidePanel()} className="flex items-center justify-center pb-2 cursor-pointer">
+          <div className="flex items-center justify-center pb-2 cursor-pointer">
             <img 
               src={mylogo} 
               alt="School Logo" 

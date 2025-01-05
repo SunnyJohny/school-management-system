@@ -194,47 +194,47 @@ export default function Students() {
   };
 
 
- 
-  
- 
+
+
+
   // const amountInWords = convertToWords(paymentData.totalAmount);
 
   const handleSubmitPayment = async () => {
-  if (paymentDetails.items.length === 0) {
-    toast.error("Please add at least one item to the payment.");
-    return;
-  }
+    if (paymentDetails.items.length === 0) {
+      toast.error("Please add at least one item to the payment.");
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const paymentData = {
-      studentId: selectedStudent?.id || "N/A",
-      studentName: selectedStudent?.name || "N/A",
-      guardianPhone: selectedStudent?.guardianPhone || "N/A",
-      studentClass: selectedStudent?.class|| "N/A",
-      items: paymentDetails.items,
-      totalAmount: paymentDetails.totalAmount,
-      timestamp: serverTimestamp(),
-      paymentMethod: paymentMethod, // Dynamic payment method
-      term: term, // Correct term from state
-      staff: {
-        id: state.user?.id || "default_staff_id",
-        name: state.user?.name || "default_staff_name",
-      },
-    };
-    
-    const amountInWords = convertToWords(paymentData.totalAmount);
+    setLoading(true);
+    try {
+      const paymentData = {
+        studentId: selectedStudent?.id || "N/A",
+        studentName: selectedStudent?.name || "N/A",
+        guardianPhone: selectedStudent?.guardianPhone || "N/A",
+        studentClass: selectedStudent?.class || "N/A",
+        items: paymentDetails.items,
+        totalAmount: paymentDetails.totalAmount,
+        timestamp: serverTimestamp(),
+        paymentMethod: paymentMethod, // Dynamic payment method
+        term: term, // Correct term from state
+        staff: {
+          id: state.user?.id || "default_staff_id",
+          name: state.user?.name || "default_staff_name",
+        },
+      };
 
-    const receiptId = `receipt_${Math.floor(Math.random() * 1000000)}`;
-    const transactionDateTime = new Date().toLocaleString();
+      const amountInWords = convertToWords(paymentData.totalAmount);
 
-    await setDoc(doc(db, `schools/${state.selectedSchoolId}/payments`, receiptId), paymentData);
+      const receiptId = `receipt_${Math.floor(Math.random() * 1000000)}`;
+      const transactionDateTime = new Date().toLocaleString();
 
-    // Generate Receipt
-    const printWindow = window.open("", "_blank");
-    console.log("Selected Term:", term);
+      await setDoc(doc(db, `schools/${state.selectedSchoolId}/payments`, receiptId), paymentData);
 
-    printWindow.document.write(`
+      // Generate Receipt
+      const printWindow = window.open("", "_blank");
+      console.log("Selected Term:", term);
+
+      printWindow.document.write(`
     <html>
     <head>
       <title>Payment Receipt</title>
@@ -295,14 +295,14 @@ export default function Students() {
         </thead>
         <tbody>
           ${paymentDetails.items
-            .map(
-              (item) => `
+          .map(
+            (item) => `
             <tr>
               <td>${item.type}</td>
               <td>${item.amount.toFixed(2)}</td>
             </tr>`
-            )
-            .join("")}
+          )
+          .join("")}
           <tr>
             <td><strong>Total</strong></td>
             <td><strong>₦${paymentDetails.totalAmount.toFixed(2)}</strong></td>
@@ -322,18 +322,18 @@ export default function Students() {
     </body>
     </html>
   `);
-    printWindow.document.close();
-    printWindow.print();
+      printWindow.document.close();
+      printWindow.print();
 
-    toast.success("Payment recorded and receipt generated successfully!");
-    closePayFeeModal();
-  } catch (error) {
-    console.error("Error submitting payment:", error);
-    toast.error("Failed to record payment. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+      toast.success("Payment recorded and receipt generated successfully!");
+      closePayFeeModal();
+    } catch (error) {
+      console.error("Error submitting payment:", error);
+      toast.error("Failed to record payment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -378,95 +378,95 @@ export default function Students() {
       )}
 
 
-{/* Render Pay Fee Modal */}
-{isPayFeeModalOpen && (
-  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-    <div className="bg-white rounded-lg w-11/12 max-w-lg max-h-[90vh] overflow-auto p-6">
-      <div className="flex justify-between mb-4">
-        <h2 className="text-xl font-bold">Pay Fee for {selectedStudent?.name}</h2>
-        <MdClose size={24} onClick={closePayFeeModal} className="cursor-pointer text-gray-600 hover:text-gray-800" />
-      </div>
+      {/* Render Pay Fee Modal */}
+      {isPayFeeModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg w-11/12 max-w-lg max-h-[90vh] overflow-auto p-6">
+            <div className="flex justify-between mb-4">
+              <h2 className="text-xl font-bold">Pay Fee for {selectedStudent?.name}</h2>
+              <MdClose size={24} onClick={closePayFeeModal} className="cursor-pointer text-gray-600 hover:text-gray-800" />
+            </div>
 
-      {/* Payment Form */}
-      <div className="mb-4">
-        <label className="block font-medium mb-2">Term</label>
-        <select
-  value={term}
-  onChange={(e) => setTerm(e.target.value)}
-  className="form-control"
->
-  <option value="First Term">First Term</option>
-  <option value="Second Term">Second Term</option>
-  <option value="Third Term">Third Term</option>
-</select>
+            {/* Payment Form */}
+            <div className="mb-4">
+              <label className="block font-medium mb-2">Term</label>
+              <select
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                className="form-control"
+              >
+                <option value="First Term">First Term</option>
+                <option value="Second Term">Second Term</option>
+                <option value="Third Term">Third Term</option>
+              </select>
 
-        <div className="mb-4">
-          <label className="block font-medium mb-2">Payment Method</label>
-          <select
-            className="input mb-2 border-2 border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          >
-            <option value="">Select Payment Method</option>
-            <option value="Cash">Cash</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Cheque">Cheque</option>
-            <option value="Mobile Payment">Mobile Payment</option>
-            <option value="Other">Other</option>
-          </select>
+              <div className="mb-4">
+                <label className="block font-medium mb-2">Payment Method</label>
+                <select
+                  className="input mb-2 border-2 border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="">Select Payment Method</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Mobile Payment">Mobile Payment</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <label className="block font-medium mb-2">Payment Type</label>
+              <select
+                className="input mb-2 border-2 border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={currentPaymentItem.type}
+                onChange={(e) => setCurrentPaymentItem((prev) => ({ ...prev, type: e.target.value }))}
+              >
+                <option value="">Select Payment Type</option>
+                <option value="School Fee">School Fee</option>
+                <option value="Admission Fee">Admission Fee</option>
+                <option value="Graduation Fee">Graduation Fee</option>
+                <option value="Tour">Tour</option>
+                <option value="Other">Other</option>
+              </select>
+
+              <input
+                type="number"
+                className="input mb-2 border-2 border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Amount"
+                value={currentPaymentItem.amount}
+                onChange={(e) => setCurrentPaymentItem((prev) => ({ ...prev, amount: e.target.value }))}
+              />
+              <button onClick={handleAddPaymentItem} className="btn-secondary mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
+                Add Item
+              </button>
+            </div>
+
+            {/* Payment Summary */}
+            <div>
+              <h3 className="font-bold">Payment Items</h3>
+              <ul className="list-disc pl-6 mb-4">
+                {paymentDetails.items.map((item, index) => (
+                  <li key={index}>
+                    {item.type} - ${item.amount.toFixed(2)}
+                  </li>
+                ))}
+              </ul>
+              <p className="font-bold">Total: ${paymentDetails.totalAmount.toFixed(2)}</p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end mt-4 space-x-2">
+              <button onClick={handleSubmitPayment} className="btn-primary px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
+                Submit Payment
+              </button>
+              <button onClick={closePayFeeModal} className="btn-secondary px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
-
-        <label className="block font-medium mb-2">Payment Type</label>
-        <select
-          className="input mb-2 border-2 border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={currentPaymentItem.type}
-          onChange={(e) => setCurrentPaymentItem((prev) => ({ ...prev, type: e.target.value }))}
-        >
-          <option value="">Select Payment Type</option>
-          <option value="School Fee">School Fee</option>
-          <option value="Admission Fee">Admission Fee</option>
-          <option value="Graduation Fee">Graduation Fee</option>
-          <option value="Tour">Tour</option>
-          <option value="Other">Other</option>
-        </select>
-
-        <input
-          type="number"
-          className="input mb-2 border-2 border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Amount"
-          value={currentPaymentItem.amount}
-          onChange={(e) => setCurrentPaymentItem((prev) => ({ ...prev, amount: e.target.value }))}
-        />
-        <button onClick={handleAddPaymentItem} className="btn-secondary mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
-          Add Item
-        </button>
-      </div>
-
-      {/* Payment Summary */}
-      <div>
-        <h3 className="font-bold">Payment Items</h3>
-        <ul className="list-disc pl-6 mb-4">
-          {paymentDetails.items.map((item, index) => (
-            <li key={index}>
-              {item.type} - ${item.amount.toFixed(2)}
-            </li>
-          ))}
-        </ul>
-        <p className="font-bold">Total: ${paymentDetails.totalAmount.toFixed(2)}</p>
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end mt-4 space-x-2">
-        <button onClick={handleSubmitPayment} className="btn-primary px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
-          Submit Payment
-        </button>
-        <button onClick={closePayFeeModal} className="btn-secondary px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
 
       {/* Render Student Details Modal */}
@@ -501,7 +501,7 @@ export default function Students() {
           Reload
         </button>
         <h1 className="text-xl font-bold text-center flex-1">Students</h1>
-        <button onClick={() => navigate("/inventory-page")} className="p-2 bg-gray-200 rounded">
+        <button onClick={() => navigate("/posscreen")} className="p-2 bg-gray-200 rounded">
           Back
         </button>
       </div>
@@ -545,19 +545,19 @@ export default function Students() {
                 <option value="Female">Female</option>
               </select>
               <select
-  id="class"
-  value={studentClass}
-  onChange={onChange}
-  className="input mb-4"
-  required={!isEditing}
->
-  <option value="">Select Class</option>
-  {state.classes.map((classItem) => (
-    <option key={classItem.id} value={classItem.className}>
-      {classItem.className}
-    </option>
-  ))}
-</select>
+                id="class"
+                value={studentClass}
+                onChange={onChange}
+                className="input mb-4"
+                required={!isEditing}
+              >
+                <option value="">Select Class</option>
+                {state.classes.map((classItem) => (
+                  <option key={classItem.id} value={classItem.className}>
+                    {classItem.className}
+                  </option>
+                ))}
+              </select>
 
               <input
                 type="text"
@@ -593,55 +593,54 @@ export default function Students() {
         </div>
       )}
 
-      {/* Students Table */}
-      <table className="table-auto w-full mt-4 border">
-        <thead>
-          <tr className="bg-gray-200">
-            <th>S/N</th>
-            <th>Photo</th>
-            <th>Admission No.</th>
-            <th>Date Admited.</th>
-            <th>Name</th>
-            <th>Sex</th>
-            <th>Class</th>
-            <th>Guardian Phone</th>
-            <th>Guardian Email</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+     {/* Students Table */}
+<table className="table-auto w-full mt-4 border border-collapse border-gray-300">
+  <thead>
+    <tr className="bg-gray-200 border border-gray-300">
+      <th className="border border-gray-300 px-4 py-2">S/N</th>
+      <th className="border border-gray-300 px-4 py-2">Photo</th>
+      <th className="border border-gray-300 px-4 py-2">Admission No.</th>
+      <th className="border border-gray-300 px-4 py-2">Date Admited.</th>
+      <th className="border border-gray-300 px-4 py-2">Name</th>
+      <th className="border border-gray-300 px-4 py-2">Sex</th>
+      <th className="border border-gray-300 px-4 py-2">Class</th>
+      <th className="border border-gray-300 px-4 py-2">Guardian Phone</th>
+      <th className="border border-gray-300 px-4 py-2">Guardian Email</th>
+      <th className="border border-gray-300 px-4 py-2">Actions</th>
+    </tr>
+  </thead>
 
-        <tbody>
-          {state.students.map((student, index) => (
-            <tr key={student.id} onClick={() => handleRowClick(student)} className="border cursor-pointer">
-              <td>{index + 1}</td>
-              <td>
-                {student.photoURL ? (
-                  <img src={student.photoURL} alt={student.name} className="w-12 h-12 rounded-full" />
-                ) : (
-                  "No Photo"
-                )}
-              </td>
-              <td>{student.admissionNumber}</td>
-              <td>{student.timestamp?.toDate?.().toLocaleDateString() || 'Invalid Date'}</td>
-              <td>{student.name}</td>
-              <td>{student.sex}</td>
-              <td>{student.class}</td>
-              <td>{student.guardianPhone}</td>
-              <td>{student.guardianEmail}</td>
-              <td>
-                <button onClick={() => handleEditStudent(student.id)} className="bg-yellow-500 text-white px-2 py-1 rounded">
-                  Edit
-                </button>
-                <button onClick={() => handleDeleteStudent(student.id)} className="bg-red-500 text-white px-2 py-1 rounded">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+  <tbody>
+    {state.students.map((student, index) => (
+      <tr key={student.id} onClick={() => handleRowClick(student)} className="border border-gray-300 cursor-pointer">
+        <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
+        <td className="border border-gray-300 px-4 py-2">
+          {student.photoURL ? (
+            <img src={student.photoURL} alt={student.name} className="w-12 h-12 rounded-full" />
+          ) : (
+            "No Photo"
+          )}
+        </td>
+        <td className="border border-gray-300 px-4 py-2">{student.admissionNumber}</td>
+        <td className="border border-gray-300 px-4 py-2">{student.timestamp?.toDate?.().toLocaleDateString() || 'Invalid Date'}</td>
+        <td className="border border-gray-300 px-4 py-2">{student.name}</td>
+        <td className="border border-gray-300 px-4 py-2">{student.sex}</td>
+        <td className="border border-gray-300 px-4 py-2">{student.class}</td>
+        <td className="border border-gray-300 px-4 py-2">{student.guardianPhone}</td>
+        <td className="border border-gray-300 px-4 py-2">{student.guardianEmail}</td>
+        <td className="border border-gray-300 px-4 py-2">
+          <button onClick={() => handleEditStudent(student.id)} className="bg-yellow-500 text-white px-2 py-1 rounded">
+            Edit
+          </button>
+          <button onClick={() => handleDeleteStudent(student.id)} className="bg-red-500 text-white px-2 py-1 rounded">
+            Delete
+          </button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
 
-
-      </table>
 
       <div className="flex justify-center p-4 space-x-4">
         <button onClick={handleOpenModal} className="btn-blue">
