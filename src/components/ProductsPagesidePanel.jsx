@@ -9,12 +9,13 @@ const ProductsPageSidePanel = () => {
   const navigate = useNavigate();
 
   const handleLinkClick = (path) => {
-    toggleSidePanel(); // Close the side panel
     if (path === "/") {
       handleLogout(); // If it's a logout action, perform logout
+    } else {
+      toggleSidePanel(); // Close the side panel for other links
     }
   };
-
+  
   const handleLogout = () => {
     logout();
     navigate('/');
