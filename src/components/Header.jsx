@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useMyContext } from "../Context/MyContext";
 import mylogo from "../assets/svg/logo (1).png";
-import { FaBars } from "react-icons/fa";
+import { FaBars, FaSyncAlt } from "react-icons/fa";
 import ProductsPageSidePanel from "./ProductsPagesidePanel";
 
 export default function Header() {
-  const { state, toggleSidePanel } = useMyContext();
+  const { state, toggleSidePanel, refreshData } = useMyContext(); // Assuming refreshData is in the context
   const [time, setTime] = useState(new Date());
 
   // Update time every second
@@ -48,12 +48,23 @@ export default function Header() {
           School Management System
         </div>
 
-        {/* Right Section: Time and Burger Menu */}
+        {/* Right Section: Time, Reload Button, and Burger Menu */}
         <div className="flex items-center space-x-4">
+          {/* Time Display */}
           <div className="text-lg font-medium text-gray-800 hidden md:block">
             {time.toLocaleTimeString()}
           </div>
-          {/* Burger menu always visible */}
+
+          {/* Reload Button */}
+          <button
+            onClick={refreshData} // Calls the context method to refresh data
+            className="flex items-center justify-center text-blue-800 text-xl bg-gray-200 hover:bg-gray-300 p-2 rounded-full"
+            title="Reload"
+          >
+            <FaSyncAlt />
+          </button>
+
+          {/* Burger menu */}
           <div className="block md:hidden" onClick={handleBurgerClick}>
             <FaBars 
               className={`text-xl cursor-pointer ${state.user ? "text-gray-800" : "text-gray-400 cursor-not-allowed"}`}

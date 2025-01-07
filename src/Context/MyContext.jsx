@@ -70,6 +70,10 @@ export const MyContextProvider = ({ children }) => {
       isSidePanelOpen: !prevState.isSidePanelOpen
     }));
   };
+
+  const refreshData = () => {
+    window.location.reload(); // Reloads the entire app
+  };
  
   const searchByKeyword = (items, keyword) => {
     console.log('Searching with keyword:', keyword); // Log the keyword
@@ -1279,7 +1283,7 @@ useEffect(() => {
       calculateTotalSoldAsset,
       fetchProductsAndCalculateSumOfSales,
       searchByKeyword,
-
+      refreshData,
       calculateTotal,
       addToCart,
       calculateTotalFeesPaid,
