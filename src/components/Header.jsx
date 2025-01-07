@@ -59,7 +59,7 @@ export default function Header() {
           <button
             onClick={refreshData} // Calls the context method to refresh data
             className="flex items-center justify-center text-blue-800 text-xl bg-gray-200 hover:bg-gray-300 p-2 rounded-full"
-            title="Reload"
+            title="Refresh"
           >
             <FaSyncAlt />
           </button>

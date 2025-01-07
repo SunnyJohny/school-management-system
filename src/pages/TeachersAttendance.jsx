@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { useMyContext } from "../Context/MyContext";
+import { useNavigate } from "react-router-dom";
 
 const TeachersAttendance = () => {
   const { state } = useMyContext();
-
-  // const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [isClockIn, setIsClockIn] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
 
@@ -29,10 +29,9 @@ const TeachersAttendance = () => {
         isClockIn
           ? toast.error("Clocked-in Not Successful")
           : toast.success("Clocked-out Successful");
-      
+
         setIsClockIn(!isClockIn);
-      }
-       else {
+      } else {
         toast.error("Failed to scan biometric data. Please try again.");
       }
     } catch (error) {
@@ -43,9 +42,16 @@ const TeachersAttendance = () => {
     }
   };
 
-  
   return (
     <div className="flex flex-col items-center p-4">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/posscreen")}
+        className="self-start bg-gray-200 text-black py-2 px-4 rounded shadow-md hover:bg-gray-300 mb-4"
+      >
+        Back
+      </button>
+
       <h1 className="text-2xl font-bold my-4">Teacher Attendance</h1>
 
       {/* Scanner Effect */}
