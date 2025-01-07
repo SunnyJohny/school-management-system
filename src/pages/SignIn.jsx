@@ -106,20 +106,9 @@ export default function SignIn() {
     }
   }
 
-  const handleReload = () => {
-    window.location.reload();
-  };
-
   return (
     <section>
       <div className="flex items-center justify-between mt-6">
-        <button
-          onClick={handleReload}
-          className="p-2 bg-gray-200 rounded ml-2"
-        >
-          Reload
-        </button>
-
         <h1 className="text-3xl font-bold text-center flex-1">Sign In</h1>
       </div>
       <div className="flex justify-center flex-wrap items-center px-6 py-12 max-w-6xl mx-auto">
