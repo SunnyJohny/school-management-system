@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMyContext } from "../Context/MyContext";
 import mylogo from "../assets/svg/springfield_golden_tulip_academy-removebg-preview.png";
 import { FaBars, FaSyncAlt, FaArrowLeft } from "react-icons/fa";
@@ -12,8 +12,11 @@ export default function Header() {
   const location = useLocation();
   const [canGoBack, setCanGoBack] = useState(false);
 
-  // ✅ pages we never want "Back" to land on
-  const AUTH_PATHS = ["/sign-in", "/sign-up", "/forgot-password"];
+  // ✅ Make it stable so it won’t trigger exhaustive-deps warning
+  const AUTH_PATHS = useMemo(
+    () => ["/sign-in", "/sign-up", "/forgot-password"],
+    []
+  );
 
   // Update time every second
   useEffect(() => {
@@ -33,7 +36,7 @@ export default function Header() {
     // show back button only when not on root/auth pages
     const isRootPath = path === "/" || AUTH_PATHS.includes(path);
     setCanGoBack(!isRootPath);
-  }, [location.pathname]);
+  }, [location.pathname, AUTH_PATHS]);
 
   const handleBack = () => {
     const prevPath = sessionStorage.getItem("lastGoodPath");

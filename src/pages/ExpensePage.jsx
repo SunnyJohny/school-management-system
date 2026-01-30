@@ -9,7 +9,7 @@ import { useMyContext } from '../Context/MyContext';
 import { faChartLine, faShoppingCart, faCalendarAlt, faBox } from '@fortawesome/free-solid-svg-icons';
 // import jsPDF from 'jspdf';
 
-import SalesPageSidePanel from '../components/SalesPageSidePanel';
+// import SalesPageSidePanel from '../components/SalesPageSidePanel';
 import ExpenseInvoiceModal from '../components/ExpenseInvoiceModal';
   import { Link } from 'react-router-dom';
 
@@ -297,10 +297,10 @@ const ExpensePage = () => {
   };
 
   return (
-    <div className="container mx-auto flex">
-      <div className="flex-none">
-        <SalesPageSidePanel />
-      </div>
+     <div className="flex w-full min-h-screen">
+    {/* <div className="flex-none">
+      <SalesPageSidePanel />
+    </div> */}
 
       <div className="ml-8 flex-1">
         <div className="mb-8 p-2">

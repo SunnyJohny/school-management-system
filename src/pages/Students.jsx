@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { storage } from "../firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import {
   doc,
   serverTimestamp,
@@ -13,6 +13,9 @@ import {
   updateDoc,
   collection,
   addDoc,
+  getDocs,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import { useMyContext } from "../Context/MyContext";
 import Spinner from "../components/Spinner";
@@ -20,37 +23,51 @@ import Spinner from "../components/Spinner";
 export default function Students() {
   const { state } = useMyContext();
   const [loading, setLoading] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentStudentId, setCurrentStudentId] = useState(null);
+
   const [studentPhoto, setStudentPhoto] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
+
   const [isPayFeeModalOpen, setIsPayFeeModalOpen] = useState(false);
 
   const [paymentDetails, setPaymentDetails] = useState({
-    items: [], // { type: 'school fee', amount: 0 }
+    items: [],
     totalAmount: 0,
   });
+
   const [currentPaymentItem, setCurrentPaymentItem] = useState({
     type: "",
     amount: "",
   });
-  const [receiptData, setReceiptData] = useState(null);
 
+  const [receiptData, setReceiptData] = useState(null);
   const [term, setTerm] = useState("First Term");
   const [paymentMethod, setPaymentMethod] = useState("");
 
-  // ✅ Added guardianId + guardianName to tie student to parent
+  // ✅ NEW: Results states (Multiple per Grade + Term)
+  const [studentResults, setStudentResults] = useState([]);
+  const [resultGrade, setResultGrade] = useState("");
+  const [resultTerm, setResultTerm] = useState("First Term");
+  const [resultPdfFile, setResultPdfFile] = useState(null);
+  const [resultUploadLoading, setResultUploadLoading] = useState(false);
+
+  // ✅ Added guardianId + guardianName + guardianAddress + studentAge + dateOfBirth
   const [formData, setFormData] = useState({
     serialNumber: "",
     admissionNumber: "",
     name: "",
     sex: "",
     class: "",
+    studentAge: "",
+    dateOfBirth: "",
     guardianPhone: "",
     guardianEmail: "",
-    guardianId: "", // ✅ NEW (Parent/Guardian unique id / uid / doc id)
-    guardianName: "", // ✅ NEW (optional)
+    guardianId: "",
+    guardianName: "",
+    guardianAddress: "",
     photoURL: "",
   });
 
@@ -59,10 +76,13 @@ export default function Students() {
     name,
     sex,
     class: studentClass,
+    studentAge,
+    dateOfBirth,
     guardianPhone,
     guardianEmail,
     guardianId,
     guardianName,
+    guardianAddress,
   } = formData;
 
   const navigate = useNavigate();
@@ -80,10 +100,13 @@ export default function Students() {
           name: studentToEdit.name || "",
           sex: studentToEdit.sex || "",
           class: studentToEdit.class || "",
+          studentAge: studentToEdit.studentAge || "",
+          dateOfBirth: studentToEdit.dateOfBirth || "",
           guardianPhone: studentToEdit.guardianPhone || "",
           guardianEmail: studentToEdit.guardianEmail || "",
-          guardianId: studentToEdit.guardianId || "", // ✅ NEW
-          guardianName: studentToEdit.guardianName || "", // ✅ NEW
+          guardianId: studentToEdit.guardianId || "",
+          guardianName: studentToEdit.guardianName || "",
+          guardianAddress: studentToEdit.guardianAddress || "",
           photoURL: studentToEdit.photoURL || "",
         });
       }
@@ -103,10 +126,7 @@ export default function Students() {
 
   const uploadStudentPhoto = async () => {
     if (!studentPhoto) return null;
-    const storageRef = ref(
-      storage,
-      `students/${studentPhoto.name}-${Date.now()}`
-    );
+    const storageRef = ref(storage, `students/${studentPhoto.name}-${Date.now()}`);
     await uploadBytes(storageRef, studentPhoto);
     return await getDownloadURL(storageRef);
   };
@@ -128,18 +148,20 @@ export default function Students() {
 
       const studentData = {
         serialNumber: (formData.serialNumber || "").trim(),
-        admissionNumber: admissionNumber.trim(),
-        name: name.trim(),
-        sex: sex.trim(),
-        class: studentClass.trim(),
+        admissionNumber: (admissionNumber || "").trim(),
+        name: (name || "").trim(),
+        sex: (sex || "").trim(),
+        class: (studentClass || "").trim(),
 
-        // legacy fields kept
-        guardianPhone: guardianPhone.trim(),
-        guardianEmail: guardianEmail.trim(),
+        studentAge: String(studentAge || "").trim(),
+        dateOfBirth: String(dateOfBirth || "").trim(),
 
-        // ✅ real link
-        guardianId: guardianId.trim(),
+        guardianPhone: (guardianPhone || "").trim(),
+        guardianEmail: (guardianEmail || "").trim(),
+
+        guardianId: (guardianId || "").trim(),
         guardianName: (guardianName || "").trim(),
+        guardianAddress: (guardianAddress || "").trim(),
 
         photoURL: photoURL,
         timestamp: serverTimestamp(),
@@ -150,51 +172,13 @@ export default function Students() {
           doc(db, `schools/${state.selectedSchoolId}/students`, currentStudentId),
           studentData
         );
-
-        // ✅ OPTIONAL (recommended): also maintain a quick link under parent
-        // Uncomment if you store parents at: schools/{schoolId}/parents/{guardianId}
-        // await setDoc(
-        //   doc(
-        //     db,
-        //     `schools/${state.selectedSchoolId}/parents/${guardianId.trim()}/children`,
-        //     currentStudentId
-        //   ),
-        //   {
-        //     studentId: currentStudentId,
-        //     studentName: studentData.name,
-        //     admissionNumber: studentData.admissionNumber,
-        //     class: studentData.class,
-        //     updatedAt: serverTimestamp(),
-        //   },
-        //   { merge: true }
-        // );
-
         toast.success("Student updated successfully!");
       } else {
         const studentId = `${Date.now()}`;
-
         await setDoc(
           doc(db, `schools/${state.selectedSchoolId}/students`, studentId),
           studentData
         );
-
-        // ✅ OPTIONAL (recommended): also maintain a quick link under parent
-        // Uncomment if you store parents at: schools/{schoolId}/parents/{guardianId}
-        // await setDoc(
-        //   doc(
-        //     db,
-        //     `schools/${state.selectedSchoolId}/parents/${guardianId.trim()}/children`,
-        //     studentId
-        //   ),
-        //   {
-        //     studentId,
-        //     studentName: studentData.name,
-        //     admissionNumber: studentData.admissionNumber,
-        //     class: studentData.class,
-        //     createdAt: serverTimestamp(),
-        //   }
-        // );
-
         toast.success("Student added successfully!");
       }
 
@@ -220,9 +204,7 @@ export default function Students() {
     if (!ok) return;
 
     try {
-      await deleteDoc(
-        doc(db, `schools/${state.selectedSchoolId}/students`, studentId)
-      );
+      await deleteDoc(doc(db, `schools/${state.selectedSchoolId}/students`, studentId));
       toast.success("Student deleted successfully!");
     } catch (error) {
       console.error("Error deleting student:", error);
@@ -231,7 +213,6 @@ export default function Students() {
   };
 
   const handleGraduateStudent = async (student) => {
-    // Only allow for Grade 6 (case-insensitive)
     const cls = (student?.class || "").trim().toLowerCase();
     if (!/grade\s*6|^6$/.test(cls)) {
       toast.error("Only Grade 6 students can be graduated.");
@@ -252,18 +233,12 @@ export default function Students() {
       };
 
       await setDoc(
-        doc(
-          db,
-          `schools/${state.selectedSchoolId}/graduates`,
-          student.id || `${Date.now()}`
-        ),
+        doc(db, `schools/${state.selectedSchoolId}/graduates`, student.id || `${Date.now()}`),
         graduateData
       );
 
       if (student.id) {
-        await deleteDoc(
-          doc(db, `schools/${state.selectedSchoolId}/students`, student.id)
-        );
+        await deleteDoc(doc(db, `schools/${state.selectedSchoolId}/students`, student.id));
       }
 
       if (selectedStudent?.id === student.id) setSelectedStudent(null);
@@ -289,23 +264,32 @@ export default function Students() {
       name: "",
       sex: "",
       class: "",
+      studentAge: "",
+      dateOfBirth: "",
       guardianPhone: "",
       guardianEmail: "",
       guardianId: "",
       guardianName: "",
+      guardianAddress: "",
       photoURL: "",
     });
   };
 
   const handleRowClick = (student) => setSelectedStudent(student);
-  const handleCloseDetails = () => setSelectedStudent(null);
+
+  const handleCloseDetails = () => {
+    setSelectedStudent(null);
+    setStudentResults([]);
+    setResultGrade("");
+    setResultTerm("First Term");
+    setResultPdfFile(null);
+  };
+
   const handlePrintStudents = () => window.print();
   const handleReload = () => window.location.reload();
 
-  // Handle opening the Pay Fee modal
   const handlePayFee = () => setIsPayFeeModalOpen(true);
 
-  // Handle closing the Pay Fee modal
   const closePayFeeModal = () => {
     setIsPayFeeModalOpen(false);
     setPaymentDetails({ items: [], totalAmount: 0 });
@@ -313,7 +297,6 @@ export default function Students() {
     setReceiptData(null);
   };
 
-  // Handle adding an item to the payment list
   const handleAddPaymentItem = () => {
     const { type, amount } = currentPaymentItem;
     if (type && amount) {
@@ -325,6 +308,180 @@ export default function Students() {
       setCurrentPaymentItem({ type: "", amount: "" });
     } else {
       toast.error("Please fill in both type and amount fields.");
+    }
+  };
+
+  // ✅ Fetch results for selected student
+  const fetchStudentResults = async (studentId) => {
+    try {
+      if (!state.selectedSchoolId || !studentId) return;
+
+      const resultsRef = collection(
+        db,
+        `schools/${state.selectedSchoolId}/students/${studentId}/results`
+      );
+
+      const q = query(resultsRef, orderBy("uploadedAt", "desc"));
+      const snap = await getDocs(q);
+
+      const results = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      setStudentResults(results);
+    } catch (err) {
+      console.error("Error fetching student results:", err);
+      toast.error("Failed to load student results.");
+    }
+  };
+
+  // ✅ When a student is opened, load their results
+  useEffect(() => {
+    if (selectedStudent?.id) {
+      fetchStudentResults(selectedStudent.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStudent?.id]);
+
+  // ✅ handle pdf change
+  const handleResultPdfChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed for results.");
+      return;
+    }
+    setResultPdfFile(file);
+  };
+
+  // ✅ upload pdf to storage + save in firestore (MULTIPLE per grade+term allowed)
+  const handleUploadResultPdf = async () => {
+    if (!selectedStudent?.id) {
+      toast.error("Select a student first.");
+      return;
+    }
+
+    if (!resultGrade.trim()) {
+      toast.error("Please select a grade for this result.");
+      return;
+    }
+
+    if (!resultTerm.trim()) {
+      toast.error("Please select a term for this result.");
+      return;
+    }
+
+    if (!resultPdfFile) {
+      toast.error("Please choose a scanned PDF file.");
+      return;
+    }
+
+    setResultUploadLoading(true);
+
+    try {
+      const schoolId = state.selectedSchoolId;
+      const studentId = selectedStudent.id;
+
+      const cleanGrade = resultGrade.trim().replace(/\s+/g, "_");
+      const cleanTerm = resultTerm.trim().replace(/\s+/g, "_");
+      const safeName = resultPdfFile.name.replace(/\s+/g, "_");
+
+      const storagePath = `schools/${schoolId}/students/${studentId}/results/${cleanGrade}/${cleanTerm}/${Date.now()}-${safeName}`;
+      const storageRef = ref(storage, storagePath);
+
+      await uploadBytes(storageRef, resultPdfFile);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      const resultsRef = collection(
+        db,
+        `schools/${schoolId}/students/${studentId}/results`
+      );
+
+      await addDoc(resultsRef, {
+        grade: resultGrade.trim(),
+        term: resultTerm.trim(),
+        fileName: resultPdfFile.name,
+        fileType: resultPdfFile.type,
+        fileSize: resultPdfFile.size,
+        url: downloadURL,
+        storagePath,
+        uploadedAt: serverTimestamp(),
+      });
+
+      toast.success("Result uploaded successfully!");
+
+      // reset + refresh
+      setResultGrade("");
+      setResultTerm("First Term");
+      setResultPdfFile(null);
+      await fetchStudentResults(studentId);
+    } catch (err) {
+      console.error("Error uploading result pdf:", err);
+      toast.error("Failed to upload result. Please try again.");
+    } finally {
+      setResultUploadLoading(false);
+    }
+  };
+
+  // ✅ Delete a result (Firestore + Storage)
+  const handleDeleteResult = async (result) => {
+    if (!selectedStudent?.id) return;
+
+    const ok = window.confirm(
+      `Delete this result?\n\n${result?.grade || ""} - ${result?.term || ""}\n${result?.fileName || ""}`
+    );
+    if (!ok) return;
+
+    try {
+      setResultUploadLoading(true);
+
+      const schoolId = state.selectedSchoolId;
+      const studentId = selectedStudent.id;
+
+      // delete file from storage (if storagePath exists)
+      if (result?.storagePath) {
+        const fileRef = ref(storage, result.storagePath);
+        await deleteObject(fileRef);
+      }
+
+      // delete doc from firestore
+      await deleteDoc(
+        doc(db, `schools/${schoolId}/students/${studentId}/results`, result.id)
+      );
+
+      toast.success("Result deleted successfully!");
+      await fetchStudentResults(studentId);
+    } catch (err) {
+      console.error("Error deleting result:", err);
+      toast.error("Failed to delete result.");
+    } finally {
+      setResultUploadLoading(false);
+    }
+  };
+
+  // ✅ WhatsApp share (STANDARD: open WhatsApp and let user choose contact)
+  const shareResultToWhatsApp = (result) => {
+    try {
+      const studentName = selectedStudent?.name || "Student";
+      const gradeText = result?.grade || "Grade";
+      const termText = result?.term || "Term";
+      const fileName = result?.fileName || "Result PDF";
+      const url = result?.url || "";
+
+      if (!url) {
+        toast.error("No result link found to share.");
+        return;
+      }
+
+      const message = `Hello,\n\nPlease find ${studentName}'s result.\nGrade: ${gradeText}\nTerm: ${termText}\nFile: ${fileName}\n\nDownload: ${url}`;
+
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+    } catch (e) {
+      console.error("WhatsApp share error:", e);
+      toast.error("Failed to share to WhatsApp.");
     }
   };
 
@@ -344,10 +501,13 @@ export default function Students() {
       const paymentData = {
         studentId: selectedStudent?.id || "N/A",
         studentName: selectedStudent?.name || "N/A",
+        studentAge: selectedStudent?.studentAge || "N/A",
+        dateOfBirth: selectedStudent?.dateOfBirth || "N/A",
         guardianPhone: selectedStudent?.guardianPhone || "N/A",
         guardianEmail: selectedStudent?.guardianEmail || "N/A",
-        guardianId: selectedStudent?.guardianId || "N/A", // ✅ tie visible in payment record
-        guardianName: selectedStudent?.guardianName || "N/A", // ✅
+        guardianId: selectedStudent?.guardianId || "N/A",
+        guardianName: selectedStudent?.guardianName || "N/A",
+        guardianAddress: selectedStudent?.guardianAddress || "N/A",
         studentClass: selectedStudent?.class || "N/A",
         items: paymentDetails.items,
         totalAmount: paymentDetails.totalAmount,
@@ -369,7 +529,6 @@ export default function Students() {
         paymentData
       );
 
-      // Generate Receipt (print)
       const printWindow = window.open("", "_blank");
       printWindow.document.write(`
         <html>
@@ -397,10 +556,13 @@ export default function Students() {
           <div class="receipt-details">
             <p><strong>Student Name:</strong> ${paymentData.studentName}</p>
             <p><strong>Student Class:</strong> ${paymentData.studentClass}</p>
+            <p><strong>Student Age:</strong> ${paymentData.studentAge}</p>
+            <p><strong>Date of Birth:</strong> ${paymentData.dateOfBirth}</p>
             <p><strong>Guardian Phone:</strong> ${paymentData.guardianPhone}</p>
             <p><strong>Guardian Email:</strong> ${paymentData.guardianEmail}</p>
             <p><strong>Guardian ID:</strong> ${paymentData.guardianId}</p>
             <p><strong>Guardian Name:</strong> ${paymentData.guardianName}</p>
+            <p><strong>Guardian Address:</strong> ${paymentData.guardianAddress}</p>
             <p><strong>Total Amount:</strong> ₦${paymentData.totalAmount.toFixed(2)}</p>
             <p><strong>Amount in Words:</strong> ${amountInWords} Only</p>
             <p><strong>Payment Method:</strong> ${paymentData.paymentMethod}</p>
@@ -499,7 +661,7 @@ export default function Students() {
 
       {/* Render Pay Fee Modal */}
       {isPayFeeModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg w-11/12 max-w-lg max-h-[90vh] overflow-auto p-6">
             <div className="flex justify-between mb-4">
               <h2 className="text-xl font-bold">
@@ -616,59 +778,187 @@ export default function Students() {
 
       {/* Render Student Details Modal */}
       {selectedStudent && !isPayFeeModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-3xl flex">
-            <div className="w-1/2">
-              <img
-                src={selectedStudent.photoURL}
-                alt={selectedStudent.name}
-                className="w-full h-auto rounded-lg"
-              />
-            </div>
-            <div className="w-1/2 ml-4 pl-6">
-              <h2 className="text-xl font-bold">{selectedStudent.name}</h2>
-              <p>
-                <strong>Admission Number:</strong>{" "}
-                {selectedStudent.admissionNumber}
-              </p>
-              <p>
-                <strong>Serial Number:</strong> {selectedStudent.serialNumber}
-              </p>
-              <p>
-                <strong>Sex:</strong> {selectedStudent.sex}
-              </p>
-              <p>
-                <strong>Class:</strong> {selectedStudent.class}
-              </p>
-
-              {/* ✅ Parent tie info */}
-              <p>
-                <strong>Guardian ID:</strong> {selectedStudent.guardianId || "N/A"}
-              </p>
-              <p>
-                <strong>Guardian Name:</strong>{" "}
-                {selectedStudent.guardianName || "N/A"}
-              </p>
-
-              <p>
-                <strong>Guardian Phone:</strong> {selectedStudent.guardianPhone}
-              </p>
-              <p>
-                <strong>Guardian Email:</strong> {selectedStudent.guardianEmail}
-              </p>
-
-              <div className="mt-4 space-x-2">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999] p-2 sm:p-4">
+          <div className="bg-white rounded-lg w-11/12 max-w-3xl relative max-h-[90vh] overflow-auto">
+            {/* ✅ Sticky Top Bar (Pay Fee + Close ON TOP of results) */}
+            <div className="sticky top-0 bg-white z-20 border-b p-3 flex items-center justify-between">
+              <div className="font-bold text-lg truncate">{selectedStudent.name}</div>
+              <div className="flex gap-2">
                 <button
                   onClick={handlePayFee}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700"
                 >
                   Pay Fee
                 </button>
                 <button
                   onClick={handleCloseDetails}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  className="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+
+            {/* ✅ Content: IMAGE ON TOP for ALL screens */}
+            <div className="p-4">
+              <div className="w-full">
+                <img
+                  src={selectedStudent.photoURL}
+                  alt={selectedStudent.name}
+                  className="w-full max-h-[320px] object-contain rounded-lg bg-gray-50"
+                />
+              </div>
+
+              <div className="mt-4">
+                <h2 className="text-xl font-bold">{selectedStudent.name}</h2>
+
+                <div className="mt-2 text-sm space-y-1">
+                  <p>
+                    <strong>Admission Number:</strong> {selectedStudent.admissionNumber}
+                  </p>
+                  <p>
+                    <strong>Serial Number:</strong> {selectedStudent.serialNumber}
+                  </p>
+                  <p>
+                    <strong>Sex:</strong> {selectedStudent.sex}
+                  </p>
+                  <p>
+                    <strong>Class:</strong> {selectedStudent.class}
+                  </p>
+                  <p>
+                    <strong>Age:</strong> {selectedStudent.studentAge || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Date of Birth:</strong> {selectedStudent.dateOfBirth || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Guardian ID:</strong> {selectedStudent.guardianId || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Guardian Name:</strong> {selectedStudent.guardianName || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Guardian Address:</strong> {selectedStudent.guardianAddress || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Guardian Phone:</strong> {selectedStudent.guardianPhone}
+                  </p>
+                  <p>
+                    <strong>Guardian Email:</strong> {selectedStudent.guardianEmail}
+                  </p>
+                </div>
+
+                {/* ✅ Results upload + list */}
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="font-bold text-lg mb-2">Student Results (PDF)</h3>
+
+                  <div className="flex flex-col gap-2">
+                    <select
+                      value={resultGrade}
+                      onChange={(e) => setResultGrade(e.target.value)}
+                      className="border border-gray-300 rounded-md p-2"
+                    >
+                      <option value="">Select Grade</option>
+                      <option value="Grade 1">Grade 1</option>
+                      <option value="Grade 2">Grade 2</option>
+                      <option value="Grade 3">Grade 3</option>
+                      <option value="Grade 4">Grade 4</option>
+                      <option value="Grade 5">Grade 5</option>
+                      <option value="Grade 6">Grade 6</option>
+                    </select>
+
+                    <select
+                      value={resultTerm}
+                      onChange={(e) => setResultTerm(e.target.value)}
+                      className="border border-gray-300 rounded-md p-2"
+                    >
+                      <option value="First Term">First Term</option>
+                      <option value="Second Term">Second Term</option>
+                      <option value="Third Term">Third Term</option>
+                    </select>
+
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleResultPdfChange}
+                      className="border border-gray-300 rounded-md p-2"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleUploadResultPdf}
+                      disabled={resultUploadLoading}
+                      className={`px-4 py-2 rounded text-white ${
+                        resultUploadLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+                      }`}
+                    >
+                      {resultUploadLoading ? "Working..." : "Upload Result PDF"}
+                    </button>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="font-semibold mb-2">Uploaded Results</h4>
+
+                    {studentResults.length === 0 ? (
+                      <p className="text-sm text-gray-500">No results uploaded yet.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {studentResults.map((r) => (
+                          <li
+                            key={r.id}
+                            className="border rounded-md p-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                          >
+                            <div className="text-sm">
+                              <p className="font-semibold">
+                                {r.grade || "Grade"} — {r.term || "Term"}
+                              </p>
+                              <p className="text-gray-600 break-all">
+                                {r.fileName || "Result.pdf"}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <a
+                                href={r.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                download
+                                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                              >
+                                Download
+                              </a>
+
+                              <button
+                                type="button"
+                                onClick={() => shareResultToWhatsApp(r)}
+                                className="bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800 text-sm"
+                              >
+                                Share WhatsApp
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteResult(r)}
+                                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                {/* ✅ Keep X button also (optional) */}
+                <button
+                  type="button"
+                  onClick={handleCloseDetails}
+                  className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
+                  aria-label="Close"
+                >
+                  <MdClose size={22} />
                 </button>
               </div>
             </div>
@@ -691,18 +981,23 @@ export default function Students() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-lg">
-            <div className="flex justify-between mb-4">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg p-6 w-11/12 max-w-lg relative max-h-[90vh] overflow-auto">
+            <div className="flex justify-between mb-4 sticky top-0 bg-white z-10 py-2">
               <h2 className="text-xl font-bold">
                 {isEditing ? "Edit Student" : "Add Student"}
               </h2>
-              <MdClose
-                size={24}
+
+              <button
+                type="button"
                 onClick={handleCloseModal}
-                className="cursor-pointer"
-              />
+                className="cursor-pointer text-gray-600 hover:text-gray-900"
+                aria-label="Close"
+              >
+                <MdClose size={24} />
+              </button>
             </div>
+
             <form onSubmit={onSubmit}>
               <input
                 type="text"
@@ -751,7 +1046,24 @@ export default function Students() {
                 ))}
               </select>
 
-              {/* ✅ Parent tie fields */}
+              <input
+                type="number"
+                id="studentAge"
+                placeholder="Student Age"
+                value={studentAge}
+                onChange={onChange}
+                className="input mb-4"
+                min="0"
+              />
+
+              <input
+                type="date"
+                id="dateOfBirth"
+                value={dateOfBirth}
+                onChange={onChange}
+                className="input mb-4"
+              />
+
               <input
                 type="text"
                 id="guardianId"
@@ -767,6 +1079,15 @@ export default function Students() {
                 id="guardianName"
                 placeholder="Parent/Guardian Name (optional)"
                 value={guardianName}
+                onChange={onChange}
+                className="input mb-4"
+              />
+
+              <input
+                type="text"
+                id="guardianAddress"
+                placeholder="Parent/Guardian Home Address"
+                value={guardianAddress}
                 onChange={onChange}
                 className="input mb-4"
               />
@@ -791,11 +1112,7 @@ export default function Students() {
                 required={!isEditing}
               />
 
-              <input
-                type="file"
-                onChange={handlePhotoChange}
-                className="mb-4"
-              />
+              <input type="file" onChange={handlePhotoChange} className="mb-4" />
 
               <button type="submit" className="btn-primary">
                 {isEditing ? "Update Student" : "Add Student"}
@@ -816,7 +1133,9 @@ export default function Students() {
             <th className="border border-gray-300 px-4 py-2">Name</th>
             <th className="border border-gray-300 px-4 py-2">Sex</th>
             <th className="border border-gray-300 px-4 py-2">Class</th>
+            <th className="border border-gray-300 px-4 py-2">Age</th>
             <th className="border border-gray-300 px-4 py-2">Guardian ID</th>
+            <th className="border border-gray-300 px-4 py-2">Guardian Address</th>
             <th className="border border-gray-300 px-4 py-2">Guardian Phone</th>
             <th className="border border-gray-300 px-4 py-2">Guardian Email</th>
             <th className="border border-gray-300 px-4 py-2">Actions</th>
@@ -854,25 +1173,25 @@ export default function Students() {
                 </td>
 
                 <td className="border border-gray-300 px-4 py-2">
-                  {student.timestamp?.toDate?.().toLocaleDateString() ||
-                    "Invalid Date"}
+                  {student.timestamp?.toDate?.().toLocaleDateString() || "Invalid Date"}
                 </td>
+
+                <td className="border border-gray-300 px-4 py-2">{student.name}</td>
+
+                <td className="border border-gray-300 px-4 py-2">{student.sex}</td>
+
+                <td className="border border-gray-300 px-4 py-2">{student.class}</td>
 
                 <td className="border border-gray-300 px-4 py-2">
-                  {student.name}
+                  {student.studentAge || "N/A"}
                 </td>
 
-                <td className="border border-gray-300 px-4 py-2">
-                  {student.sex}
-                </td>
-
-                <td className="border border-gray-300 px-4 py-2">
-                  {student.class}
-                </td>
-
-                {/* ✅ show guardianId in table */}
                 <td className="border border-gray-300 px-4 py-2">
                   {student.guardianId || "N/A"}
+                </td>
+
+                <td className="border border-gray-300 px-4 py-2">
+                  {student.guardianAddress || "N/A"}
                 </td>
 
                 <td className="border border-gray-300 px-4 py-2">
@@ -957,27 +1276,12 @@ export const convertToWords = (num) => {
     "Eighteen",
     "Nineteen",
   ];
-  const b = [
-    "",
-    "",
-    "Twenty",
-    "Thirty",
-    "Forty",
-    "Fifty",
-    "Sixty",
-    "Seventy",
-    "Eighty",
-    "Ninety",
-  ];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
 
   const convertHundreds = (n) => {
     if (n < 20) return a[n];
     if (n < 100) return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
-    return (
-      a[Math.floor(n / 100)] +
-      " Hundred" +
-      (n % 100 ? " and " + convertHundreds(n % 100) : "")
-    );
+    return a[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " and " + convertHundreds(n % 100) : "");
   };
 
   const convertThousands = (n) => {
