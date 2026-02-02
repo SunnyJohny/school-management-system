@@ -1304,9 +1304,10 @@ export const convertToWords = (num) => {
   const naira = Math.floor(num);
   const kobo = Math.round((num - naira) * 100);
 
-  
+
   let words = "";
 
+  
   if (naira > 0) {
     words += convertThousands(naira) + " Naira";
   }
