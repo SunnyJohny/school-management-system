@@ -20,18 +20,19 @@ export default function Classes() {
     numberOfStudents: "",
   });
 
-  const classOptions = [
-    "Creche",
-    "Nursery 1",
-    "Nursery 2",
-    "Nursery 3",
-    "Grade 1",
-    "Grade 2",
-    "Grade 3",
-    "Grade 4",
-    "Grade 5",
-    "Grade 6",
-  ];
+ const classOptions = [
+  "Creche",
+  "Nursery 1",
+  "Nursery 2",
+  "Nursery 3",
+  "Primary 1",
+  "Primary 2",
+  "Primary 3",
+  "Primary 4",
+  "Primary 5",
+  "Primary 6",
+];
+
 
   const { className, numberOfStudents } = formData;
   const navigate = useNavigate();

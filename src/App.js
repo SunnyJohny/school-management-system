@@ -30,6 +30,10 @@ import TeachersAttendance from "./pages/TeachersAttendance";
 import Graduates from "./pages/Graduates";
 import ResignedTeachers from "./pages/ResignedTeachers";
 
+// ✅ ADD USERS PAGE
+import Users from "./components/Users";
+// C:\Users\Engr\Desktop\school-management-system-master\src\components\Users.jsx
+
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -38,40 +42,59 @@ function App() {
 
         <div className="flex-grow overflow-y-auto">
           <Routes>
+            {/* ✅ PUBLIC ROUTES ONLY */}
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
 
-            <Route path="/teachers" element={<Teachers />} />
-            <Route path="/teachersattendance" element={<TeachersAttendance />} />
-
-            <Route path="/classes" element={<Classes />} />
-            <Route path="/students" element={<ManageStudents />} />
-
-            <Route path="/fees" element={<FeesPaidReport />} />
-            <Route path="/graduates" element={<Graduates />} />
-            <Route path="/resignees-retirees" element={<ResignedTeachers />} />
-
-            <Route path="/report-bug" element={<ContactMe />} />
+            {/* If you truly want this public, keep it outside PrivateRoute.
+                If not, move it inside below. */}
             <Route path="/company-sign-up" element={<CompanySignUp />} />
 
-            <Route path="/posscreen" element={<PosScreen />} />
+            {/* ✅ PROTECTED ROUTES */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/users" element={<Users />} />
 
-            <Route path="/add-expense" element={<AddExpense />} />
-            <Route path="/add-purchase" element={<AddGoodPurchase />} />
+              <Route path="/teachers" element={<Teachers />} />
+              <Route
+                path="/teachersattendance"
+                element={<TeachersAttendance />}
+              />
 
-            <Route path="/add-asset" element={<AddAsset />} />
-            <Route path="/add-liability" element={<AddLiability />} />
-            <Route path="/add-shares" element={<AddShares />} />
-            <Route path="/add-tax" element={<AddTax />} />
+              <Route path="/classes" element={<Classes />} />
+              <Route path="/students" element={<ManageStudents />} />
 
-            <Route path="/profitandloss" element={<ProfitAndLoss />} />
-            <Route path="/balance-sheet" element={<BalanceSheet />} />
-            <Route path="/cash-flow" element={<CashFlow />} />
+              <Route path="/fees" element={<FeesPaidReport />} />
+              <Route path="/graduates" element={<Graduates />} />
+              <Route
+                path="/resignees-retirees"
+                element={<ResignedTeachers />}
+              />
 
-            <Route path="/expenses" element={<ExpensePage />} />
-         
+              <Route path="/report-bug" element={<ContactMe />} />
 
-            <Route path="/profile" element={<PrivateRoute />} />
+              <Route path="/posscreen" element={<PosScreen />} />
+
+              <Route path="/add-expense" element={<AddExpense />} />
+              <Route path="/add-purchase" element={<AddGoodPurchase />} />
+
+              <Route path="/add-asset" element={<AddAsset />} />
+              <Route path="/add-liability" element={<AddLiability />} />
+              <Route path="/add-shares" element={<AddShares />} />
+              <Route path="/add-tax" element={<AddTax />} />
+
+              <Route path="/profitandloss" element={<ProfitAndLoss />} />
+              <Route path="/balance-sheet" element={<BalanceSheet />} />
+              <Route path="/cash-flow" element={<CashFlow />} />
+
+              <Route path="/expenses" element={<ExpensePage />} />
+
+              {/* If /profile is protected, define its real component here.
+                  Your old code had element={<PrivateRoute />} which doesn't render a page.
+                  Example:
+                  <Route path="/profile" element={<Profile />} />
+               */}
+              <Route path="/profile" element={<PosScreen />} />
+            </Route>
           </Routes>
         </div>
 

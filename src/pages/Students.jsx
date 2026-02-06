@@ -47,14 +47,14 @@ export default function Students() {
   const [term, setTerm] = useState("First Term");
   const [paymentMethod, setPaymentMethod] = useState("");
 
-  // ✅ NEW: Results states (Multiple per Grade + Term)
+  // ✅ Results states (Multiple per Grade + Term)
   const [studentResults, setStudentResults] = useState([]);
   const [resultGrade, setResultGrade] = useState("");
   const [resultTerm, setResultTerm] = useState("First Term");
   const [resultPdfFile, setResultPdfFile] = useState(null);
   const [resultUploadLoading, setResultUploadLoading] = useState(false);
 
-  // ✅ Added guardianId + guardianName + guardianAddress + studentAge + dateOfBirth
+  // ✅ Student formData (Guardian fields kept for student record, but will NOT print on receipt)
   const [formData, setFormData] = useState({
     serialNumber: "",
     admissionNumber: "",
@@ -136,7 +136,7 @@ export default function Students() {
     setLoading(true);
 
     try {
-      // ✅ Ensure parent is attached
+      // ✅ Ensure parent is attached (kept for student record)
       if (!guardianId?.trim()) {
         toast.error("Please enter/select the Parent/Guardian ID for this student.");
         setLoading(false);
@@ -394,10 +394,7 @@ export default function Students() {
       await uploadBytes(storageRef, resultPdfFile);
       const downloadURL = await getDownloadURL(storageRef);
 
-      const resultsRef = collection(
-        db,
-        `schools/${schoolId}/students/${studentId}/results`
-      );
+      const resultsRef = collection(db, `schools/${schoolId}/students/${studentId}/results`);
 
       await addDoc(resultsRef, {
         grade: resultGrade.trim(),
@@ -440,16 +437,12 @@ export default function Students() {
       const schoolId = state.selectedSchoolId;
       const studentId = selectedStudent.id;
 
-      // delete file from storage (if storagePath exists)
       if (result?.storagePath) {
         const fileRef = ref(storage, result.storagePath);
         await deleteObject(fileRef);
       }
 
-      // delete doc from firestore
-      await deleteDoc(
-        doc(db, `schools/${schoolId}/students/${studentId}/results`, result.id)
-      );
+      await deleteDoc(doc(db, `schools/${schoolId}/students/${studentId}/results`, result.id));
 
       toast.success("Result deleted successfully!");
       await fetchStudentResults(studentId);
@@ -461,7 +454,7 @@ export default function Students() {
     }
   };
 
-  // ✅ WhatsApp share (STANDARD: open WhatsApp and let user choose contact)
+  // ✅ WhatsApp share
   const shareResultToWhatsApp = (result) => {
     try {
       const studentName = selectedStudent?.name || "Student";
@@ -498,16 +491,12 @@ export default function Students() {
 
     setLoading(true);
     try {
+      // ✅ Removed ALL guardian/parent fields from paymentData for receipt + stored payment record
       const paymentData = {
         studentId: selectedStudent?.id || "N/A",
         studentName: selectedStudent?.name || "N/A",
         studentAge: selectedStudent?.studentAge || "N/A",
         dateOfBirth: selectedStudent?.dateOfBirth || "N/A",
-        guardianPhone: selectedStudent?.guardianPhone || "N/A",
-        guardianEmail: selectedStudent?.guardianEmail || "N/A",
-        guardianId: selectedStudent?.guardianId || "N/A",
-        guardianName: selectedStudent?.guardianName || "N/A",
-        guardianAddress: selectedStudent?.guardianAddress || "N/A",
         studentClass: selectedStudent?.class || "N/A",
         items: paymentDetails.items,
         totalAmount: paymentDetails.totalAmount,
@@ -524,81 +513,113 @@ export default function Students() {
       const receiptId = `receipt_${Math.floor(Math.random() * 1000000)}`;
       const transactionDateTime = new Date().toLocaleString();
 
-      await setDoc(
-        doc(db, `schools/${state.selectedSchoolId}/payments`, receiptId),
-        paymentData
-      );
+      await setDoc(doc(db, `schools/${state.selectedSchoolId}/payments`, receiptId), paymentData);
 
       const printWindow = window.open("", "_blank");
+
+      // ✅ Cleaner, professional receipt (NO parent/guardian section)
       printWindow.document.write(`
         <html>
         <head>
           <title>Payment Receipt</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-            .header { text-align: center; }
-            .header h2 { margin: 0; }
-            .receipt-details { margin: 20px 0; }
-            .table { width: 100%; border-collapse: collapse; }
-            .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .table th { background-color: #f2f2f2; }
+            body { font-family: Arial, sans-serif; margin: 24px; color:#111; }
+            .wrap { max-width: 720px; margin: 0 auto; }
+            .top { text-align: center; margin-bottom: 14px; }
+            .school-name { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: .2px; }
+            .school-meta { margin-top: 6px; font-size: 12px; color:#444; line-height: 1.35; }
+            .school-meta div { font-weight: 400; }
+
+            .meta-row { display:flex; justify-content: space-between; gap: 12px; margin: 12px 0 16px; font-size: 12px; color:#222; }
+            .meta-row .pill { background:#f3f4f6; padding: 6px 10px; border-radius: 8px; }
+
+            .section-title { font-size: 12px; font-weight: 700; color:#111; margin: 12px 0 6px; text-transform: uppercase; letter-spacing: .4px; }
+            .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font-size: 12px; }
+            .row { display:flex; gap: 6px; }
+            .label { min-width: 110px; color:#555; font-weight: 600; }
+            .value { color:#111; font-weight: 400; word-break: break-word; }
+
+            .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+            .table th, .table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+            .table th { background-color: #f9fafb; font-weight: 700; }
+            .total-row td { font-weight: 700; }
+
+            .summary { margin-top: 10px; font-size: 12px; }
+            .summary .big { font-size: 13px; font-weight: 700; }
+
+            .footer { margin-top: 18px; padding-top: 10px; border-top: 1px dashed #ddd; font-size: 11px; color:#555; text-align:center; }
+            .muted { color:#666; font-style: italic; }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h2>${state.selectedSchoolName || "School Name"}</h2>
-            <h2>${state.selectedSchoolAddress || "School Address"}</h2>
-            <h2>${state.selectedSchoolPhoneNumber || "School PhoneNumber"}</h2>
-            <h2>${state.selectedSchoolEmail || "School Email"}</h2>
-            <p>Receipt Number: ${receiptId}</p>
-            <p>Date: ${transactionDateTime}</p>
-          </div>
-          <div class="receipt-details">
-            <p><strong>Student Name:</strong> ${paymentData.studentName}</p>
-            <p><strong>Student Class:</strong> ${paymentData.studentClass}</p>
-            <p><strong>Student Age:</strong> ${paymentData.studentAge}</p>
-            <p><strong>Date of Birth:</strong> ${paymentData.dateOfBirth}</p>
-            <p><strong>Guardian Phone:</strong> ${paymentData.guardianPhone}</p>
-            <p><strong>Guardian Email:</strong> ${paymentData.guardianEmail}</p>
-            <p><strong>Guardian ID:</strong> ${paymentData.guardianId}</p>
-            <p><strong>Guardian Name:</strong> ${paymentData.guardianName}</p>
-            <p><strong>Guardian Address:</strong> ${paymentData.guardianAddress}</p>
-            <p><strong>Total Amount:</strong> ₦${paymentData.totalAmount.toFixed(2)}</p>
-            <p><strong>Amount in Words:</strong> ${amountInWords} Only</p>
-            <p><strong>Payment Method:</strong> ${paymentData.paymentMethod}</p>
-            <p><strong>Term:</strong> ${paymentData.term}</p>
-          </div>
-          <table class="table">
-            <thead>
-              <tr><th>Item</th><th>Amount (₦)</th></tr>
-            </thead>
-            <tbody>
-              ${paymentDetails.items
-                .map(
-                  (item) => `
-                <tr>
-                  <td>${item.type}</td>
-                  <td>${Number(item.amount).toFixed(2)}</td>
-                </tr>`
-                )
-                .join("")}
-              <tr>
-                <td><strong>Total</strong></td>
-                <td><strong>₦${paymentDetails.totalAmount.toFixed(2)}</strong></td>
-              </tr>
-            </tbody>
-          </table>
-          <p>Attendant: ${state.user?.name || "Staff Name"}</p>
-          <div class="footer">
-            <hr />
-            <p style="text-align: center; font-style: italic; margin-top: 20px; font-size: 14px;">Journey to Excellence...</p>
-          </div>
-          <div class="footer">
-            <p><em>Developer Contact : 08030611606</em></p>
+          <div class="wrap">
+            <div class="top">
+              <h1 class="school-name">${state.selectedSchoolName || "School Name"}</h1>
+
+              <div class="school-meta">
+                <div>${state.selectedSchoolAddress || ""}</div>
+                <div>
+                  ${state.selectedSchoolPhoneNumber ? `Tel: ${state.selectedSchoolPhoneNumber}` : ""}
+                  ${state.selectedSchoolPhoneNumber && state.selectedSchoolEmail ? " • " : ""}
+                  ${state.selectedSchoolEmail ? `Email: ${state.selectedSchoolEmail}` : ""}
+                </div>
+              </div>
+            </div>
+
+            <div class="meta-row">
+              <div class="pill"><strong>Receipt:</strong> ${receiptId}</div>
+              <div class="pill"><strong>Date:</strong> ${transactionDateTime}</div>
+            </div>
+
+            <div class="section-title">Student Information</div>
+            <div class="grid">
+              <div class="row"><div class="label">Student Name</div><div class="value">${paymentData.studentName}</div></div>
+              <div class="row"><div class="label">Class</div><div class="value">${paymentData.studentClass}</div></div>
+              <div class="row"><div class="label">Age</div><div class="value">${paymentData.studentAge}</div></div>
+              <div class="row"><div class="label">DOB</div><div class="value">${paymentData.dateOfBirth}</div></div>
+            </div>
+
+            <div class="section-title">Payment</div>
+            <div class="grid">
+              <div class="row"><div class="label">Method</div><div class="value">${paymentData.paymentMethod}</div></div>
+              <div class="row"><div class="label">Term</div><div class="value">${paymentData.term}</div></div>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr><th>Item</th><th>Amount (₦)</th></tr>
+              </thead>
+              <tbody>
+                ${paymentDetails.items
+                  .map(
+                    (item) => `
+                      <tr>
+                        <td>${item.type}</td>
+                        <td>${Number(item.amount).toFixed(2)}</td>
+                      </tr>`
+                  )
+                  .join("")}
+                <tr class="total-row">
+                  <td>Total</td>
+                  <td>₦${paymentDetails.totalAmount.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="summary">
+              <div><span class="label">Amount in Words</span> <span class="value">${amountInWords} Only</span></div>
+              <div class="big" style="margin-top:6px;">Attendant: ${state.user?.name || "Staff Name"}</div>
+            </div>
+
+            <div class="footer">
+              <div class="muted">Journey to Excellence...</div>
+              <div style="margin-top:6px;">Developer Contact: 08030611606</div>
+            </div>
           </div>
         </body>
         </html>
       `);
+
       printWindow.document.close();
       printWindow.print();
 
@@ -734,6 +755,7 @@ export default function Students() {
                   }))
                 }
               />
+
               <button
                 onClick={handleAddPaymentItem}
                 className="btn-secondary mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
@@ -780,7 +802,6 @@ export default function Students() {
       {selectedStudent && !isPayFeeModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999] p-2 sm:p-4">
           <div className="bg-white rounded-lg w-11/12 max-w-3xl relative max-h-[90vh] overflow-auto">
-            {/* ✅ Sticky Top Bar (Pay Fee + Close ON TOP of results) */}
             <div className="sticky top-0 bg-white z-20 border-b p-3 flex items-center justify-between">
               <div className="font-bold text-lg truncate">{selectedStudent.name}</div>
               <div className="flex gap-2">
@@ -799,7 +820,6 @@ export default function Students() {
               </div>
             </div>
 
-            {/* ✅ Content: IMAGE ON TOP for ALL screens */}
             <div className="p-4">
               <div className="w-full">
                 <img
@@ -831,6 +851,8 @@ export default function Students() {
                   <p>
                     <strong>Date of Birth:</strong> {selectedStudent.dateOfBirth || "N/A"}
                   </p>
+
+                  {/* ✅ Parent fields still shown in student details (you can delete these too if you want) */}
                   <p>
                     <strong>Guardian ID:</strong> {selectedStudent.guardianId || "N/A"}
                   </p>
@@ -848,7 +870,6 @@ export default function Students() {
                   </p>
                 </div>
 
-                {/* ✅ Results upload + list */}
                 <div className="mt-6 border-t pt-4">
                   <h3 className="font-bold text-lg mb-2">Student Results (PDF)</h3>
 
@@ -936,13 +957,13 @@ export default function Students() {
                                 Share WhatsApp
                               </button>
 
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteResult(r)}
-                                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-                              >
-                                Delete
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteResult(r)}
+                                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                                >
+                                  Delete
+                                </button>
                             </div>
                           </li>
                         ))}
@@ -951,7 +972,6 @@ export default function Students() {
                   </div>
                 </div>
 
-                {/* ✅ Keep X button also (optional) */}
                 <button
                   type="button"
                   onClick={handleCloseDetails}
@@ -971,22 +991,16 @@ export default function Students() {
           Reload
         </button>
         <h1 className="text-xl font-bold text-center flex-1">Students</h1>
-        <button
-          onClick={() => navigate("/posscreen")}
-          className="p-2 bg-gray-200 rounded"
-        >
+        <button onClick={() => navigate("/posscreen")} className="p-2 bg-gray-200 rounded">
           Back
         </button>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 w-11/12 max-w-lg relative max-h-[90vh] overflow-auto">
             <div className="flex justify-between mb-4 sticky top-0 bg-white z-10 py-2">
-              <h2 className="text-xl font-bold">
-                {isEditing ? "Edit Student" : "Add Student"}
-              </h2>
+              <h2 className="text-xl font-bold">{isEditing ? "Edit Student" : "Add Student"}</h2>
 
               <button
                 type="button"
@@ -1122,7 +1136,6 @@ export default function Students() {
         </div>
       )}
 
-      {/* Students Table */}
       <table className="table-auto w-full mt-4 border border-collapse border-gray-300">
         <thead>
           <tr className="bg-gray-200 border border-gray-300">
@@ -1145,7 +1158,7 @@ export default function Students() {
         <tbody>
           {(state.students || []).map((student, index) => {
             const isGrade6 =
-              /grade\s*6/i.test((student.class || "").trim()) ||
+              /grade\\s*6/i.test((student.class || "").trim()) ||
               (student.class || "").trim() === "6";
 
             return (
@@ -1168,9 +1181,7 @@ export default function Students() {
                   )}
                 </td>
 
-                <td className="border border-gray-300 px-4 py-2">
-                  {student.admissionNumber}
-                </td>
+                <td className="border border-gray-300 px-4 py-2">{student.admissionNumber}</td>
 
                 <td className="border border-gray-300 px-4 py-2">
                   {student.timestamp?.toDate?.().toLocaleDateString() || "Invalid Date"}
@@ -1186,21 +1197,15 @@ export default function Students() {
                   {student.studentAge || "N/A"}
                 </td>
 
-                <td className="border border-gray-300 px-4 py-2">
-                  {student.guardianId || "N/A"}
-                </td>
+                <td className="border border-gray-300 px-4 py-2">{student.guardianId || "N/A"}</td>
 
                 <td className="border border-gray-300 px-4 py-2">
                   {student.guardianAddress || "N/A"}
                 </td>
 
-                <td className="border border-gray-300 px-4 py-2">
-                  {student.guardianPhone}
-                </td>
+                <td className="border border-gray-300 px-4 py-2">{student.guardianPhone}</td>
 
-                <td className="border border-gray-300 px-4 py-2">
-                  {student.guardianEmail}
-                </td>
+                <td className="border border-gray-300 px-4 py-2">{student.guardianEmail}</td>
 
                 <td className="border border-gray-300 px-4 py-2 flex gap-2">
                   <button
@@ -1304,10 +1309,8 @@ export const convertToWords = (num) => {
   const naira = Math.floor(num);
   const kobo = Math.round((num - naira) * 100);
 
-
   let words = "";
 
-  
   if (naira > 0) {
     words += convertThousands(naira) + " Naira";
   }
@@ -1318,4 +1321,3 @@ export const convertToWords = (num) => {
 
   return words || "Zero Naira";
 };
-

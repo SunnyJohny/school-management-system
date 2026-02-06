@@ -6,7 +6,7 @@ import ProductsPageSidePanel from "./ProductsPagesidePanel";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Header() {
-  const { state, toggleSidePanel, refreshData } = useMyContext();
+  const { state, toggleSidePanel } = useMyContext();
   const [time, setTime] = useState(new Date());
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,7 +53,11 @@ export default function Header() {
 
   const handleBurgerClick = () => {
     if (state.user) toggleSidePanel();
-    else console.log("User is not signed in. Burger menu is disabled.");
+  };
+
+  // ✅ HARD RELOAD ONLY (no firebase, no context refresh)
+  const handleReload = () => {
+    window.location.reload();
   };
 
   return (
@@ -106,10 +110,10 @@ export default function Header() {
           </div>
 
           <button
-            onClick={refreshData}
+            onClick={handleReload}
             className="flex items-center justify-center text-blue-800 text-xl bg-gray-200 hover:bg-gray-300 p-2 rounded-full"
-            title="Refresh"
-            aria-label="Refresh data"
+            title="Reload page"
+            aria-label="Reload page"
           >
             <FaSyncAlt />
           </button>
