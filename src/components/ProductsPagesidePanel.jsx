@@ -8,7 +8,7 @@ import {
   FaCalendarCheck,
   FaBuilding,
   FaMoneyCheckAlt,
-  FaMoneyBillWave,
+  // FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaBug,
   FaSignOutAlt,
@@ -77,7 +77,7 @@ const ProductsPageSidePanel = () => {
           className="flex items-center p-2 cursor-pointer hover:bg-gray-700"
         >
           <FaUserTie className="text-xl" />
-          <p className="ml-2">Teachers</p>
+          <p className="ml-2">Staff</p>
         </Link>
 
         <Link
@@ -145,14 +145,14 @@ const ProductsPageSidePanel = () => {
           <p className="ml-2">Expenses</p>
         </Link>
 
-        <Link
+        {/* <Link
           to="/add-tax"
           onClick={handleLinkClick}
           className="flex items-center p-2 cursor-pointer hover:bg-gray-700"
         >
           <FaMoneyBillWave className="text-xl" />
           <p className="ml-2">Add Tax</p>
-        </Link>
+        </Link> */}
 
         <Link
           to="/profitandloss"

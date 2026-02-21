@@ -9,12 +9,10 @@ import "react-toastify/dist/ReactToastify.css";
 import Footer from "./components/Footer";
 
 import PosScreen from "./pages/PosScreen";
-import AddExpense from "./components/AddExpenses";
 import AddGoodPurchase from "./components/AddPurchases";
 import ExpensePage from "./pages/ExpensePage";
 import ProfitAndLoss from "./pages/ProfitAndLoss";
 import BalanceSheet from "./pages/BalanceSheet";
-import AddTax from "./components/AddTax";
 import AddAsset from "./components/AddAsset";
 import AddLiability from "./components/AddLiability";
 import CashFlow from "./pages/CashFlow";
@@ -32,6 +30,7 @@ import ResignedTeachers from "./pages/ResignedTeachers";
 
 // ✅ ADD USERS PAGE
 import Users from "./components/Users";
+import Assets from "./pages/Assets";
 // C:\Users\Engr\Desktop\school-management-system-master\src\components\Users.jsx
 
 function App() {
@@ -74,13 +73,11 @@ function App() {
 
               <Route path="/posscreen" element={<PosScreen />} />
 
-              <Route path="/add-expense" element={<AddExpense />} />
               <Route path="/add-purchase" element={<AddGoodPurchase />} />
 
-              <Route path="/add-asset" element={<AddAsset />} />
+              <Route path="/add-asset" element={<Assets />} />
               <Route path="/add-liability" element={<AddLiability />} />
               <Route path="/add-shares" element={<AddShares />} />
-              <Route path="/add-tax" element={<AddTax />} />
 
               <Route path="/profitandloss" element={<ProfitAndLoss />} />
               <Route path="/balance-sheet" element={<BalanceSheet />} />

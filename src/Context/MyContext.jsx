@@ -36,6 +36,10 @@ export const MyContextProvider = ({ children }) => {
     payments: [],
     feesPaid: [],
 
+    // ✅ P&L (optional but recommended)
+    expenses: [],
+    taxes: [],
+
     // ✅ UI / local
     cart: [],
     isCartOpen: false,
@@ -54,12 +58,78 @@ export const MyContextProvider = ({ children }) => {
 
   const [state, setState] = useState(initialState);
 
+  // ✅ Safe date filter (works with Firestore Timestamp + normal dates)
   const searchByDate = (data, fromDate, toDate) => {
-    return data.filter((item) => {
-      const timestamp = item.timestamp?.toDate?.() || new Date(item.timestamp);
-      return timestamp >= fromDate && timestamp <= toDate;
+    const list = Array.isArray(data) ? data : [];
+
+    // No date selected => return all
+    if (!fromDate && !toDate) return list;
+
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(toDate) : null;
+
+    // include whole "to" day
+    if (to) to.setHours(23, 59, 59, 999);
+
+    return list.filter((item) => {
+      const raw =
+        item?.timestamp || item?.createdAt || item?.date || item?.Timestamp;
+
+      if (!raw) return false;
+
+      const d = raw?.toDate ? raw.toDate() : new Date(raw);
+      if (Number.isNaN(d.getTime())) return false;
+
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+
+      return true;
     });
   };
+
+  // ✅ Revenue (Fees) total: sums either payment.items[].amount OR payment.amount/paidAmount/totalAmount
+  const calculateTotalRevenue = useCallback((payments) => {
+    const list = Array.isArray(payments) ? payments : [];
+
+    const total = list.reduce((acc, payment) => {
+      // If payment has items array (your existing structure)
+      if (Array.isArray(payment?.items)) {
+        const itemsTotal = payment.items.reduce((sum, item) => {
+          const v = parseFloat(item?.amount ?? item?.fee ?? 0);
+          return isNaN(v) ? sum : sum + v;
+        }, 0);
+        return acc + itemsTotal;
+      }
+
+      // fallback: single amount fields
+      const single = parseFloat(
+        payment?.amount ?? payment?.paidAmount ?? payment?.totalAmount ?? 0
+      );
+      return isNaN(single) ? acc : acc + single;
+    }, 0);
+
+    return Number(total.toFixed(2));
+  }, []);
+
+  // ✅ Expenses total: sums expense.amount
+  const calculateTotalExpenses = useCallback((expenses) => {
+    const list = Array.isArray(expenses) ? expenses : [];
+    const total = list.reduce((acc, exp) => {
+      const v = parseFloat(exp?.amount ?? 0);
+      return isNaN(v) ? acc : acc + v;
+    }, 0);
+    return Number(total.toFixed(2));
+  }, []);
+
+  // ✅ Taxes total: sums tax.paidAmount OR tax.amount
+  const calculateTotalTaxes = useCallback((taxes) => {
+    const list = Array.isArray(taxes) ? taxes : [];
+    const total = list.reduce((acc, tax) => {
+      const v = parseFloat(tax?.paidAmount ?? tax?.amount ?? 0);
+      return isNaN(v) ? acc : acc + v;
+    }, 0);
+    return Number(total.toFixed(2));
+  }, []);
 
   // Toggle functions for Cart and Side Panel
   const toggleCart = () => {
@@ -223,6 +293,64 @@ export const MyContextProvider = ({ children }) => {
           ...d.data(),
         }));
         setState((prev) => ({ ...prev, payments: paymentsData }));
+      },
+      () => {
+        // removed console output
+      }
+    );
+
+    return () => unsub();
+  }, [db, state.selectedSchoolId]);
+
+  // ✅ expenses (school-scoped)
+  useEffect(() => {
+    if (!state.selectedSchoolId) {
+      setState((prev) => ({ ...prev, expenses: [] }));
+      return;
+    }
+
+    const q = query(
+      collection(db, `schools/${state.selectedSchoolId}/expenses`),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const expensesData = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setState((prev) => ({ ...prev, expenses: expensesData }));
+      },
+      () => {
+        // removed console output
+      }
+    );
+
+    return () => unsub();
+  }, [db, state.selectedSchoolId]);
+
+  // ✅ taxes (school-scoped)
+  useEffect(() => {
+    if (!state.selectedSchoolId) {
+      setState((prev) => ({ ...prev, taxes: [] }));
+      return;
+    }
+
+    const q = query(
+      collection(db, `schools/${state.selectedSchoolId}/taxes`),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const taxesData = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setState((prev) => ({ ...prev, taxes: taxesData }));
       },
       () => {
         // removed console output
@@ -443,21 +571,23 @@ export const MyContextProvider = ({ children }) => {
   }, [fetchFeesPaidData, state.selectedSchoolId]);
 
   const calculateTotalFeesPaid = useCallback((payments) => {
-    if (!payments || payments.length === 0) return 0;
-    const totalFeesPaid = payments.reduce((total, payment) => {
-      if (Array.isArray(payment.items)) {
-        return (
-          total +
-          payment.items.reduce((sum, item) => {
-            const feeValue = parseFloat(item.amount || 0);
-            return isNaN(feeValue) ? sum : sum + feeValue;
-          }, 0)
-        );
+    const list = Array.isArray(payments) ? payments : [];
+    const total = list.reduce((totalAcc, payment) => {
+      if (Array.isArray(payment?.items)) {
+        const itemsSum = payment.items.reduce((sum, item) => {
+          const feeValue = parseFloat(item?.amount ?? 0);
+          return isNaN(feeValue) ? sum : sum + feeValue;
+        }, 0);
+        return totalAcc + itemsSum;
       }
-      return total;
+
+      const v = parseFloat(
+        payment?.amount ?? payment?.paidAmount ?? payment?.totalAmount ?? 0
+      );
+      return isNaN(v) ? totalAcc : totalAcc + v;
     }, 0);
 
-    return totalFeesPaid.toFixed(2);
+    return Number(total.toFixed(2));
   }, []);
 
   // CART helpers (simple local state updates)
@@ -568,6 +698,13 @@ export const MyContextProvider = ({ children }) => {
         refreshData,
         addToCart,
         calculateTotalFeesPaid,
+
+        // ✅ P&L helpers/totals
+        searchByDate,
+        calculateTotalRevenue,
+        calculateTotalExpenses,
+        calculateTotalTaxes,
+
         removeFromCart,
         clearCart,
         toggleCart,
@@ -575,7 +712,6 @@ export const MyContextProvider = ({ children }) => {
         increaseQuantity,
         decreaseQuantity,
         logout,
-        searchByDate,
       }}
     >
       {children}
